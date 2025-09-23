@@ -29,7 +29,7 @@ export const CustomInput = ({
       >
         <Tooltip title={label} arrow>
           <Typography sx={{...labelStyle}} component={"span"}>
-            {label.length > 14 ? label.slice(0, 14) + "..." : label}
+            {label.length > 20 ? label.slice(0, 20) + "..." : label}
           </Typography>
         </Tooltip>
         {required && <Box component={"span"} color={"var(--error)"}>*</Box>}

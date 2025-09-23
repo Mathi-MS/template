@@ -4,6 +4,8 @@ import { Login } from "../Auth/Login";
 import { Dashboard } from "../Components/Dashboard";
 import { ProtectedRoute, PublicOnlyRoute } from "./ProtectedRoutes";
 import Timeout from "../Components/Timeout";
+import { ForgetPassword } from "../Auth/ForgetPassword";
+import { ResetPassword } from "../Auth/ResetPassword";
 
 const routes = createHashRouter([
   {
@@ -17,6 +19,14 @@ const routes = createHashRouter([
   {
     path: "/timeout",
     element: <Timeout />,
+  },
+  {
+    path: "/forget-password",
+    element: <ForgetPassword />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
   },
   {
     path: "/",

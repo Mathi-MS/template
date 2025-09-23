@@ -1,15 +1,11 @@
 import { Box, Typography, Checkbox, FormControlLabel } from "@mui/material";
 import {
-  imageBottom,
-  imageTop,
-  LoginLogo,
   LoginPage,
   LoginPagebottomText,
   LoginPageLeft,
   LoginPageRight,
 } from "../assets/Styles/LoginStyle";
 import { images } from "../assets/Images/Images";
-import AllInclusiveIcon from "@mui/icons-material/AllInclusive";
 import { CustomInput } from "../Custom/CustomInput";
 import { useState } from "react";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -18,29 +14,32 @@ import CustomButton from "../Custom/CustomButton";
 import { useForm, Controller } from "react-hook-form";
 import { LoginSchema } from "../assets/Validation/Schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 export const Login = () => {
   const [visibility, setVisibility] = useState(false);
   const {
     register,
     handleSubmit,
-    setValue,
-    getValues,
     reset,
-    watch,
     control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(LoginSchema),
     defaultValues: { rememberMe: false },
   });
+  const navigate = useNavigate();
   const onsubmit = async (data: {
     email: string;
     password: string;
     rememberMe?: boolean;
   }) => {
-    // data.rememberMe will be true when checked, false/undefined otherwise
     console.log(data);
+    navigate("/dashboard");
+    reset();
+    Cookies.set("tokenBoiler", "token");
+    Cookies.set("role", "SuperAdmin");
+    Cookies.set("name", "Gopal");
   };
   return (
     <>
@@ -115,17 +114,28 @@ export const Login = () => {
                     label="Keep me signed in"
                     sx={{
                       color: "var(--text-secondary)",
-                      ".MuiFormControlLabel-label": {color: "var(--text-secondary)", fontSize: "14px",fontFamily: "Regular_M"},
-                      "& svg":{
-                        color:"var(--primary)"
-                      }
+                      ".MuiFormControlLabel-label": {
+                        color: "var(--text-secondary)",
+                        fontSize: "14px",
+                        fontFamily: "Regular_M",
+                      },
+                      "& svg": {
+                        color: "var(--primary)",
+                      },
                     }}
                   />
                 )}
               />
               <Box
                 component={"span"}
-                sx={{ color: "var(--primary)", fontSize: "14px" }}
+                sx={{
+                  color: "var(--primary)",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  navigate("/forget-password");
+                }}
               >
                 Forgot Password?
               </Box>
