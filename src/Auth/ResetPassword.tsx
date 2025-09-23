@@ -83,7 +83,7 @@ export const ResetPassword = () => {
               type={visibilityConfirm ? "text" : "password"}
               name="confirmPassword"
               endAdornment={
-                visibility ? (
+                visibilityConfirm ? (
                   <Box
                     sx={{ cursor: "pointer" }}
                     onClick={() => setVisibilityConfirm(!visibilityConfirm)}
