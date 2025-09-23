@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   List,
@@ -17,10 +17,15 @@ import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import TravelExploreOutlinedIcon from '@mui/icons-material/TravelExploreOutlined';
 export const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
 
   const handleToggle = (label: string) => {
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
   };
 
   const navLinks = useMemo(
@@ -79,7 +84,7 @@ export const Sidebar = () => {
               <ListItemButton
                 selected={isSelected}
                 onClick={() =>
-                  item?.children ? handleToggle(item.label) : null
+                  item?.children ? handleToggle(item.label) : handleNavigation(item.path)
                 }
                 sx={{
                   borderRadius: 2,
@@ -125,6 +130,7 @@ export const Sidebar = () => {
                       <ListItemButton
                         key={sub.path}
                         selected={location.pathname === sub.path}
+                        onClick={() => handleNavigation(sub.path)}
                         sx={{
                           pl: 6,
                           "&.Mui-selected": {

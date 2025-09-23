@@ -144,8 +144,8 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           alignItems: "center",
           gap: 2,
           justifyContent: "space-between",
-          px: { xs: 1.5, md: 3 },
-          py: { xs: 0.75, md: 2 },
+          px: { xs: 2, md: 3 },
+          py: { xs: 1, md: 2 },
           backgroundColor: "var(--white)",
         }}
       >
@@ -159,6 +159,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             minWidth: 0,
           }}
         >
+          {/* Menu button - only show on desktop */}
           <IconButton
             onClick={onMenuClick}
             aria-label="toggle sidebar"
@@ -169,11 +170,41 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
               borderRadius: "6px",
               width: "38px",
               height: "38px",
+              display: { xs: "none", md: "flex" },
             }}
           >
             <HiBars3CenterLeft />
           </IconButton>
-          <Box>
+
+          {/* Logo/Brand on mobile */}
+          <Box
+            sx={{
+              display: { xs: "flex", md: "none" },
+              alignItems: "center",
+              gap: 1,
+              fontWeight: 700,
+              fontSize: 18,
+              color: "#111",
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: "SemiBold_M",
+                fontSize: "18px",
+                color: "var(--primary)",
+              }}
+            >
+              Boil
+            </Typography>
+          </Box>
+
+          {/* Search - desktop only */}
+          <Box
+            sx={{
+              display: { xs: "none", md: "block" },
+            }}
+          >
             <CustomInput
               label=""
               placeholder="Search or type command..."
@@ -207,10 +238,10 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1,
+            gap: { xs: 0.5, md: 1 },
           }}
         >
-          {/* Dark Mode Toggle */}
+          {/* Dark Mode Toggle - show on all devices */}
           <Tooltip
             title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
@@ -233,14 +264,14 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             </IconButton>
           </Tooltip>
 
-          {/* Language Selector */}
+          {/* Language Selector - show on all devices but compact on mobile */}
           <FormControl size="small">
             <Select
               value={selectedLanguage}
               onChange={handleLanguageChange}
               displayEmpty
               sx={{
-                minWidth: 80,
+                minWidth: { xs: 60, md: 80 },
                 height: "38px",
                 border: "1px solid var(--border)",
                 borderRadius: "6px",
@@ -248,12 +279,20 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
                   border: "none",
                 },
                 "& .MuiSelect-select": {
-                  padding: "8px 12px",
+                  padding: { xs: "8px 8px", md: "8px 12px" },
                   fontSize: "13px",
                   fontFamily: "Regular_M",
                 },
               }}
-              startAdornment={<LanguageIcon sx={{ mr: 1, fontSize: 16 }} />}
+              startAdornment={
+                <LanguageIcon
+                  sx={{
+                    mr: { xs: 0.5, md: 1 },
+                    fontSize: 16,
+                    display: { xs: "none", sm: "block" },
+                  }}
+                />
+              }
             >
               <MenuItem value="en" sx={{ fontFamily: "Regular_M" }}>
                 EN
@@ -309,7 +348,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
               alignItems: "center",
               gap: 1,
               cursor: "pointer",
-              padding: "6px 12px",
+              padding: { xs: "6px", md: "6px 12px" },
               borderRadius: "6px",
               "&:hover": {
                 backgroundColor: "var(--hover-bg, #f5f5f5)",
@@ -338,7 +377,12 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             >
               {userData.name}
             </Typography>
-            <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />
+            <KeyboardArrowDownIcon
+              sx={{
+                fontSize: 16,
+                display: { xs: "none", sm: "block" },
+              }}
+            />
           </Box>
         </Box>
 
@@ -444,7 +488,17 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             </Typography>
           </Box>
 
-          <MenuItem onClick={handleProfileClick} sx={{ mt: 1 }}>
+          <MenuItem
+            onClick={handleProfileClick}
+            sx={{
+              mt: 1,
+              minHeight: "0px !important",
+
+              "& .MuiButtonBase-root": {
+                minHeight: "0px !important",
+              },
+            }}
+          >
             <ListItemIcon>
               <PersonOutlineIcon fontSize="small" />
             </ListItemIcon>
@@ -457,7 +511,10 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             />
           </MenuItem>
 
-          <MenuItem onClick={handleSupport}>
+          <MenuItem
+            onClick={handleSupport}
+            sx={{ minHeight: "0px !important" }}
+          >
             <ListItemIcon>
               <InfoOutlinedIcon fontSize="small" />
             </ListItemIcon>
@@ -472,7 +529,10 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
 
           <Divider />
 
-          <MenuItem onClick={handleSignOut}>
+          <MenuItem
+            onClick={handleSignOut}
+            sx={{ minHeight: "0px !important" }}
+          >
             <ListItemIcon>
               <LogoutIcon fontSize="small" />
             </ListItemIcon>
