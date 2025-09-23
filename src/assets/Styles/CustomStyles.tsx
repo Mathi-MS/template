@@ -18,9 +18,8 @@ export const CustomInputStyles = {
   "& .MuiInputAdornment-root": {
     margin: "0px",
     "& .MuiSvgIcon-root": {
-      fontSize: "16px",
+      fontSize: "20px",
       color: "var(--customIcon)",
-      marginTop: "8px",
     },
   },
   "& .MuiTextField-root": {

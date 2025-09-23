@@ -3,6 +3,12 @@ import SearchIcon from "@mui/icons-material/Search";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import LogoutIcon from "@mui/icons-material/Logout";
+import SupportIcon from "@mui/icons-material/Support";
+import LanguageIcon from "@mui/icons-material/Language";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
   Avatar,
   Badge,
@@ -14,10 +20,47 @@ import {
   MenuItem,
   Typography,
   Tooltip,
+  Select,
+  FormControl,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
+import { HiBars3CenterLeft } from "react-icons/hi2";
 import { useMemo, useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { CustomInput } from "../Custom/CustomInput";
+import { RiSearchLine } from "react-icons/ri";
+import { keyframes } from "@mui/material";
+
+// Badge pulse animation
+const badgePulse = keyframes`
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 var(--primary);
+    opacity: 1;
+  }
+  25% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(var(--primary-rgb, 25, 118, 210), 0.4);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 8px rgba(var(--primary-rgb, 25, 118, 210), 0.2);
+    opacity: 0.8;
+  }
+  75% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 12px rgba(var(--primary-rgb, 25, 118, 210), 0.1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 16px rgba(var(--primary-rgb, 25, 118, 210), 0);
+    opacity: 1;
+  }
+`;
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -25,46 +68,63 @@ interface HeaderProps {
 }
 
 export const Header = ({ onMenuClick }: HeaderProps) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
+  const [notificationAnchorEl, setNotificationAnchorEl] =
+    useState<null | HTMLElement>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
   const navigate = useNavigate();
+
+  // Profile dropdown handlers
   const openProfile = (e: React.MouseEvent<HTMLElement>) =>
-    setAnchorEl(e.currentTarget);
+    setProfileAnchorEl(e.currentTarget);
   const closeProfile = () => {
-    setAnchorEl(null);
+    setProfileAnchorEl(null);
   };
-  const handleLogout = () => {
-    Cookies.remove("name");
-    Cookies.remove("role");
-    Cookies.remove("email");
+
+  // Notification dropdown handlers
+  const openNotifications = (e: React.MouseEvent<HTMLElement>) =>
+    setNotificationAnchorEl(e.currentTarget);
+  const closeNotifications = () => {
+    setNotificationAnchorEl(null);
+  };
+
+  // Dark mode toggle
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    // You can add theme context logic here
+  };
+
+  // Language change handler
+  const handleLanguageChange = (event: any) => {
+    setSelectedLanguage(event.target.value);
+  };
+
+  // Profile menu actions
+  const handleProfileClick = () => {
+    closeProfile();
+    navigate("/profile");
+  };
+
+  const handleSignOut = () => {
+    closeProfile();
+    Cookies.remove("authToken"); // Adjust based on your auth implementation
     navigate("/login");
   };
 
-  const username = Cookies.get("name");
-  const role = Cookies.get("role");
-  // Dummy user
-  const user = useMemo(() => ({ name: username, role: role, image: "" }), []);
-  const userInitial = user.name?.trim()?.charAt(0)?.toUpperCase() ?? "U";
+  const handleSupport = () => {
+    closeProfile();
+    navigate("/support");
+  };
 
-  const pageTitle = "Welcome back,";
-
-  // Theme toggle: sync with localStorage and HTML attribute
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    try {
-      const saved = localStorage.getItem("theme");
-      if (saved === "dark" || saved === "light") return saved;
-      const attr = document.documentElement.getAttribute("data-theme");
-      if (attr === "dark" || attr === "light") return attr;
-    } catch {}
-    return "dark";
-  });
-  useEffect(() => {
-    const root = document.documentElement;
-    root.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () =>
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  // Mock user data - replace with actual user data
+  const userData = {
+    name: "John Doe",
+    userId: "JD001",
+    avatar: "/path/to/avatar.jpg", // Replace with actual avatar path
+  };
 
   return (
     <Box
@@ -84,8 +144,8 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           alignItems: "center",
           gap: 2,
           justifyContent: "space-between",
-          px: { xs: 1.5, md: 2.5 },
-          py: { xs: 0.75, md: 1.4 },
+          px: { xs: 1.5, md: 3 },
+          py: { xs: 0.75, md: 2 },
           backgroundColor: "var(--white)",
         }}
       >
@@ -103,24 +163,33 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             onClick={onMenuClick}
             aria-label="toggle sidebar"
             size="small"
-            sx={{ color: "var(--titleThird)" }}
-          >
-            <MenuIcon />
-          </IconButton>
-
-          <Typography
-            variant="h6"
             sx={{
-              color: "var(--title)",
-              fontWeight: 700,
-              lineHeight: 1.2,
-              fontSize: { xs: "15px", md: "16px" },
-              letterSpacing: 0.2,
+              color: "var(--text-secondar)",
+              border: "1px solid var(--border)",
+              borderRadius: "6px",
+              width: "38px",
+              height: "38px",
             }}
-            noWrap
           >
-            {pageTitle + " " + user.name}
-          </Typography>
+            <HiBars3CenterLeft />
+          </IconButton>
+          <Box>
+            <CustomInput
+              label=""
+              placeholder="Search or type command..."
+              type="text"
+              name="email"
+              startAdornment={<RiSearchLine />}
+              boxSx={{
+                width: "300px",
+                "& input": {
+                  padding: "10px 12px",
+                  fontSize: "13px",
+                  fontFamily: "Regular_M",
+                },
+              }}
+            />
+          </Box>
         </Box>
 
         {/* Center: search (md+) */}
@@ -134,96 +203,288 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         ></Box>
 
         {/* Right: actions */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          {/* Theme toggle */}
-          {/*<Tooltip
-            title={
-              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
-            }
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          {/* Dark Mode Toggle */}
+          <Tooltip
+            title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             <IconButton
-              onClick={toggleTheme}
-              aria-label="toggle theme"
-              sx={{ color: "var(--title)" }}
+              onClick={toggleDarkMode}
+              size="small"
+              sx={{
+                color: "var(--text-secondary)",
+                border: "1px solid var(--border)",
+                borderRadius: "200px",
+                width: "38px",
+                height: "38px",
+              }}
             >
-              {theme === "dark" ? (
-                <LightModeOutlinedIcon fontSize="small" />
+              {isDarkMode ? (
+                <LightModeOutlinedIcon />
               ) : (
-                <DarkModeOutlinedIcon fontSize="small" />
+                <DarkModeOutlinedIcon />
               )}
             </IconButton>
-          </Tooltip> 
+          </Tooltip>
 
-          <IconButton aria-label="notifications" sx={{ color: "var(--title)" }}>
-            <Badge color="primary" variant="dot" overlap="circular">
-              <NotificationsNoneOutlinedIcon />
-            </Badge>
-          </IconButton>
-            */}
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-
-          <IconButton
-            onClick={openProfile}
-            sx={{ p: 0.25 }}
-            aria-label="open profile menu"
-          >
-            <Avatar
+          {/* Language Selector */}
+          <FormControl size="small">
+            <Select
+              value={selectedLanguage}
+              onChange={handleLanguageChange}
+              displayEmpty
               sx={{
-                width: 32,
-                height: 32,
-                bgcolor: "var(--avatar-bg)",
-                color: "var(--avatar-fg)",
-                fontSize: 14,
-                fontWeight: 700,
+                minWidth: 80,
+                height: "38px",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                "& .MuiOutlinedInput-notchedOutline": {
+                  border: "none",
+                },
+                "& .MuiSelect-select": {
+                  padding: "8px 12px",
+                  fontSize: "13px",
+                  fontFamily: "Regular_M",
+                },
               }}
-              src={user.image || undefined}
+              startAdornment={<LanguageIcon sx={{ mr: 1, fontSize: 16 }} />}
             >
-              {!user.image && userInitial}
-            </Avatar>
-          </IconButton>
+              <MenuItem value="en" sx={{ fontFamily: "Regular_M" }}>
+                EN
+              </MenuItem>
+              <MenuItem value="es" sx={{ fontFamily: "Regular_M" }}>
+                ES
+              </MenuItem>
+              <MenuItem value="fr" sx={{ fontFamily: "Regular_M" }}>
+                FR
+              </MenuItem>
+              <MenuItem value="de" sx={{ fontFamily: "Regular_M" }}>
+                DE
+              </MenuItem>
+            </Select>
+          </FormControl>
 
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={closeProfile}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
-            PaperProps={{
-              elevation: 0,
-              sx: {
-                overflow: "hidden",
-                mt: 1,
-                borderRadius: 2,
-                border: "1px solid var(--border-color)",
-                boxShadow: "0px 4px 16px rgba(0,0,0,0.06)",
-                minWidth: 220,
-                backgroundColor: "var(--white)",
+          {/* Notifications */}
+          <Tooltip title="Notifications">
+            <IconButton
+              onClick={openNotifications}
+              size="small"
+              sx={{
+                color: "var(--text-secondary)",
+                border: "1px solid var(--border)",
+                borderRadius: "200px",
+                width: "38px",
+                height: "38px",
+              }}
+            >
+              <Badge
+                badgeContent={3}
+                variant="dot"
+                sx={{
+                  "& .MuiBadge-badge": {
+                    background: "var(--primary)",
+                    animation: `${badgePulse} 2s infinite`,
+                    animationDelay: "0.5s",
+                    top: "-5px",
+                    right: "-5px",
+                  },
+                }}
+              >
+                <NotificationsNoneOutlinedIcon />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+
+          {/* Profile Dropdown */}
+          <Box
+            onClick={openProfile}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              cursor: "pointer",
+              padding: "6px 12px",
+              borderRadius: "6px",
+              "&:hover": {
+                backgroundColor: "var(--hover-bg, #f5f5f5)",
               },
             }}
           >
-            <Box sx={{ px: 1.5, py: 1 }}>
+            <Avatar
+              src={userData.avatar}
+              sx={{
+                width: 28,
+                height: 28,
+                fontSize: "12px",
+                backgroundColor: "var(--primary)",
+              }}
+            >
+              {userData.name.charAt(0)}
+            </Avatar>
+            <Typography
+              variant="body2"
+              sx={{
+                fontSize: "13px",
+                fontFamily: "Regular_M",
+                color: "var(--text-primary)",
+                display: { xs: "none", sm: "block" },
+              }}
+            >
+              {userData.name}
+            </Typography>
+            <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />
+          </Box>
+        </Box>
+
+        {/* Notification Dropdown Menu */}
+        <Menu
+          anchorEl={notificationAnchorEl}
+          open={Boolean(notificationAnchorEl)}
+          onClose={closeNotifications}
+          PaperProps={{
+            sx: {
+              mt: 1,
+              minWidth: 260,
+              maxHeight: 400,
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+            },
+          }}
+        >
+          <Box sx={{ p: 2, borderBottom: "1px solid var(--border)" }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: "14px",
+                fontWeight: 600,
+                fontFamily: "Regular_M",
+              }}
+            >
+              Notifications
+            </Typography>
+          </Box>
+          <MenuItem onClick={closeNotifications}>
+            <Box>
               <Typography
-                variant="subtitle2"
-                sx={{ color: "var(--title)", lineHeight: 1.2 }}
+                variant="body2"
+                sx={{
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  fontFamily: "Regular_M",
+                }}
               >
-                {user.name}
+                New message received
               </Typography>
-              <Typography variant="caption" sx={{ color: "var(--titleSec)" }}>
-                {user.role}
+              <Typography
+                variant="caption"
+                sx={{ color: "var(--text-secondary)", fontFamily: "Regular_M" }}
+              >
+                2 minutes ago
               </Typography>
             </Box>
-            <Divider />
-            {/* <MenuItem onClick={closeProfile} sx={{ color: "var(--title)" }}>
-              Profile
-            </MenuItem>
-            <MenuItem onClick={closeProfile} sx={{ color: "var(--title)" }}>
-              Settings
-            </MenuItem> */}
-            <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
-              Logout
-            </MenuItem>
-          </Menu>
-        </Box>
+          </MenuItem>
+          <MenuItem onClick={closeNotifications}>
+            <Box>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  fontFamily: "Regular_M",
+                }}
+              >
+                New message received
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: "var(--text-secondary)", fontFamily: "Regular_M" }}
+              >
+                2 minutes ago
+              </Typography>
+            </Box>
+          </MenuItem>
+        </Menu>
+
+        {/* Profile Dropdown Menu */}
+        <Menu
+          anchorEl={profileAnchorEl}
+          open={Boolean(profileAnchorEl)}
+          onClose={closeProfile}
+          PaperProps={{
+            sx: {
+              mt: 1,
+              minWidth: 220,
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+            },
+          }}
+        >
+          <Box sx={{ py: 1, px: 2, borderBottom: "1px solid var(--border)" }}>
+            <Typography
+              variant="body1"
+              sx={{
+                fontSize: "14px",
+                fontWeight: 600,
+                fontFamily: "Regular_M",
+              }}
+            >
+              {userData.name}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ color: "var(--text-secondary)", fontFamily: "Regular_M" }}
+            >
+              ID: {userData.userId}
+            </Typography>
+          </Box>
+
+          <MenuItem onClick={handleProfileClick} sx={{ mt: 1 }}>
+            <ListItemIcon>
+              <PersonOutlineIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Profile"
+              primaryTypographyProps={{
+                fontSize: "13px",
+                fontFamily: "Regular_M",
+              }}
+            />
+          </MenuItem>
+
+          <MenuItem onClick={handleSupport}>
+            <ListItemIcon>
+              <InfoOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Support"
+              primaryTypographyProps={{
+                fontSize: "13px",
+                fontFamily: "Regular_M",
+              }}
+            />
+          </MenuItem>
+
+          <Divider />
+
+          <MenuItem onClick={handleSignOut}>
+            <ListItemIcon>
+              <LogoutIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Sign Out"
+              primaryTypographyProps={{
+                fontSize: "13px",
+                fontFamily: "Regular_M",
+              }}
+            />
+          </MenuItem>
+        </Menu>
       </Box>
     </Box>
   );

@@ -1,169 +1,154 @@
 import { useMemo, useState } from "react";
-import { useLocation } from "react-router-dom"; // Import useLocation
+import { useLocation } from "react-router-dom";
 import {
   Box,
-  Avatar,
-  Typography,
-  Divider,
-  Menu,
-  MenuItem,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Tooltip,
+  Collapse,
+  Chip,
 } from "@mui/material";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import AssessmentIcon from "@mui/icons-material/Assessment";
-import SettingsIcon from "@mui/icons-material/Settings";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import LogoutIcon from "@mui/icons-material/Logout";
-import type { SidebarProps } from "../Interface/Custom";
-import { images } from "../assets/Images/Images";
-import Cookies from "js-cookie";
+import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
+import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
+import TravelExploreOutlinedIcon from '@mui/icons-material/TravelExploreOutlined';
+export const Sidebar = () => {
+  const location = useLocation();
+  const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
 
-export const Sidebar = ({
-  onNavigate,
-  onNavigateLink,
-  onLogout,
-  onProfileSettings,
-}: SidebarProps) => {
-  const location = useLocation(); // Get current route location
-  const role = Cookies.get("role");
-
-  const navLinks = useMemo(() => {
-    if (role === "plant") {
-      return [
-        {
-          label: "Dashboard",
-          path: "/dashboard",
-          icon: <DashboardIcon fontSize="small" />,
-        },
-        {
-          label: "Upload Invoice",
-          path: "/upload-invoice",
-          icon: <UploadFileIcon fontSize="small" />,
-        },
-        {
-          label: "All Tickets",
-          path: "/tickets",
-          icon: <AssessmentIcon fontSize="small" />,
-        },
-      ];
-    } else if (role === "ra") {
-      return [
-        {
-          label: "Dashboard",
-          path: "/dashboard",
-          icon: <DashboardIcon fontSize="small" />,
-        },
-        {
-          label: "All Tickets",
-          path: "/tickets",
-          icon: <AssessmentIcon fontSize="small" />,
-        },
-      ];
-    } else {
-      return [];
-    }
-  }, [role]);
-
-  const user = { name: "John Doe", role: "Admin", image: "" };
-  const userInitial = user.name?.trim()?.charAt(0)?.toUpperCase() ?? "U";
-
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
-  const openMenu = (e: React.MouseEvent<HTMLElement>) =>
-    setMenuAnchor(e.currentTarget);
-  const closeMenu = () => setMenuAnchor(null);
-
-  const handleNavClick = (path: string) => {
-    onNavigateLink?.(path);
-    onNavigate?.();
+  const handleToggle = (label: string) => {
+    setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
   };
+
+  const navLinks = useMemo(
+    () => [
+      {
+        label: "Dashboard",
+        path: "/dashboard",
+        icon: <DashboardOutlinedIcon fontSize="small" />,
+      },
+      {
+        label: "Tickets",
+        path: "/tickets",
+        icon: <ReceiptLongOutlinedIcon fontSize="small" />,
+      },
+      {
+        label: "Masters",
+        path: "/masters",
+        icon: <ManageAccountsOutlinedIcon fontSize="small" />,
+      },
+      // {
+      //   label: "AI Assistant",
+      //   icon: <AssignmentIcon fontSize="small" />,
+      //   badge: "NEW",
+      //   children: [
+      //     { label: "Chatbot", path: "/ai/chatbot" },
+      //     { label: "Summarizer", path: "/ai/summarizer" },
+      //   ],
+      // },
+    ],
+    []
+  );
 
   return (
     <Box
       sx={{
-        height: "100%",
+        width: "100%",
+        height: "100vh",
+        backgroundColor: "#fff",
+        borderRight: "1px solid #e5e7eb",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "var(--white)",
       }}
     >
-      {/* Logo / Brand */}
-      <Box
-        sx={{
-          p: 2,
-          backgroundColor: "var(--white)",
-        }}
-      >
-        <Box
-          component="img"
-          src={images.logincompany}
-          alt="Brand"
-          sx={{ width: 130, display: "block", mx: "auto", userSelect: "none" }}
-        />
+      {/* Logo */}
+      <Box sx={{ p: 3, fontWeight: 700, fontSize: 22, color: "#111" }}>
+        <TravelExploreOutlinedIcon sx={{color:"var(--primary)"}}/> BoilerPlate
       </Box>
 
-      {/* Navigation */}
-      <Box sx={{ flex: 1, overflow: "auto", p: 1.25 }}>
-        <List sx={{ mt: 0.5 }}>
-          {navLinks.map((link) => {
-            const selected = location.pathname === link.path; // Compare with current location
-            return (
-              <Tooltip
-                key={link.path}
-                title={link.label}
-                placement="right"
-                disableInteractive
+      {/* Menu */}
+      <List sx={{ flex: 1 }}>
+        {navLinks.map((item) => {
+          const isSelected = location.pathname === item.path;
+
+          return (
+            <Box key={item.label} sx={{px:1.5}}>
+              <ListItemButton
+                selected={isSelected}
+                onClick={() =>
+                  item?.children ? handleToggle(item.label) : null
+                }
+                sx={{
+                  borderRadius: 2,
+                  mb: 0.5,
+                  color:"var(--text-secondary)",
+                  "&.Mui-selected": {
+                    backgroundColor: "rgba(59,130,246,0.1)",
+                    color: "#2563eb",
+                    "& .MuiListItemIcon-root": { color: "#2563eb" },
+                  },
+                  "& .MuiTypography-root ":{
+                    fontFamily:"Light_M",
+                  }
+                }}
               >
-                <ListItemButton
-                  selected={selected}
-                  onClick={() => handleNavClick(link.path)}
-                  sx={{
-                    position: "relative",
-                    borderRadius: "5px",
-                    mb: 0.5,
-                    px: 1.25,
-                    py: 0.8,
-                    transition: "background-color 0.2s ease, color 0.2s ease",
-                    color: "var(--title)",
-                    "& .MuiListItemIcon-root": {
-                      minWidth: 32,
-                      color: "var(--titleSec)",
-                    },
-                    "&:not(.Mui-selected):hover": {
-                      backgroundColor: "var(--secondary)",
-                    },
-                    "&.Mui-selected, &.Mui-selected:hover": {
-                      backgroundColor: "var(--primary)",
-                    },
-                    "&.Mui-selected .MuiListItemIcon-root, &.Mui-selected .MuiListItemText-primary":
-                      {
-                        color: "var(--white)",
-                      },
-                  }}
-                >
-                  <ListItemIcon>{link.icon}</ListItemIcon>
-                  <ListItemText
-                    primary={link.label}
-                    primaryTypographyProps={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      noWrap: true,
-                      letterSpacing: 0.2,
+                <ListItemIcon sx={{ minWidth: 36 }}>{item.icon}</ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
+                />
+                {item.badge && (
+                  <Chip
+                    label={item.badge}
+                    size="small"
+                    sx={{
+                      ml: "auto",
+                      fontSize: 10,
+                      bgcolor: "#dcfce7",
+                      color: "#16a34a",
+                      fontFamily:'Bold_M',
                     }}
                   />
-                </ListItemButton>
-              </Tooltip>
-            );
-          })}
-        </List>
-      </Box>
+                )}
+                {item.children &&
+                  (openMenus[item.label] ? <ExpandLess /> : <ExpandMore />)}
+              </ListItemButton>
 
-      <Divider />
+              {/* Submenu */}
+              {item.children && (
+                <Collapse in={openMenus[item.label]} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {item.children.map((sub) => (
+                      <ListItemButton
+                        key={sub.path}
+                        selected={location.pathname === sub.path}
+                        sx={{
+                          pl: 6,
+                          "&.Mui-selected": {
+                            backgroundColor: "rgba(59,130,246,0.08)",
+                            color: "#2563eb",
+                          },
+                          "& .MuiTypography-root ":{
+                    fontFamily:"Regular_M",
+                  }
+                        }}
+                      >
+                        <ListItemText
+                          primary={sub.label}
+                          primaryTypographyProps={{ fontSize: 13 }}
+                        />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Collapse>
+              )}
+            </Box>
+          );
+        })}
+      </List>
     </Box>
   );
 };

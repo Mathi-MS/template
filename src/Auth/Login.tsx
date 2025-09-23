@@ -89,6 +89,16 @@ export const Login = () => {
               }
               register={register}
               errors={errors}
+              boxSx={{
+                "& .MuiInputAdornment-root": {
+                  margin: "0px",
+                  "& .MuiSvgIcon-root": {
+                    fontSize: "16px",
+                    color: "var(--customIcon)",
+                    marginTop: "8px",
+                  },
+                },
+              }}
             />
             <Box
               sx={{

@@ -1,4 +1,4 @@
-import { Box, Typography, } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import {
   LoginPage,
   LoginPagebottomText,
@@ -74,7 +74,17 @@ export const ResetPassword = () => {
               }
               register={register}
               errors={errors}
-              boxSx={{ mb: 2 }}
+              boxSx={{
+                mb: 2,
+                "& .MuiInputAdornment-root": {
+                  margin: "0px",
+                  "& .MuiSvgIcon-root": {
+                    fontSize: "16px",
+                    color: "var(--customIcon)",
+                    marginTop: "8px",
+                  },
+                },
+              }}
             />
             <CustomInput
               label="Confirm Password"
@@ -101,7 +111,17 @@ export const ResetPassword = () => {
               }
               register={register}
               errors={errors}
-              boxSx={{ mb: 2 }}
+              boxSx={{
+                mb: 2,
+                "& .MuiInputAdornment-root": {
+                  margin: "0px",
+                  "& .MuiSvgIcon-root": {
+                    fontSize: "16px",
+                    color: "var(--customIcon)",
+                    marginTop: "8px",
+                  },
+                },
+              }}
             />
             <CustomButton
               type="submit"
