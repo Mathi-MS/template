@@ -29,6 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { CustomInput } from "../Custom/CustomInput";
 import { RiSearchLine } from "react-icons/ri";
 import { keyframes } from "@mui/material";
+import { GoogleTranslate } from "./GoogleTranslate";
 
 // Badge pulse animation
 const badgePulse = keyframes`
@@ -195,7 +196,6 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
               Boil
             </Typography>
           </Box>
-
           {/* Search - desktop only */}
           <Box
             sx={{
@@ -260,9 +260,35 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
               )}
             </IconButton>
           </Tooltip>
+          <Box
+            sx={{
+              position: "relative",
+              width: "38px",
+              height: "38px",
+              "& svg": {
+                position: "absolute",
+                zIndex: 999,
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+                margin: "auto",
+                pointerEvents: "none",
+                color: "var(--text-secondary)",
+                border: "1px solid var(--border)",
+                borderRadius: "200px",
+                width: "38px",
+                height: "38px",
+                padding: "7px",
+              },
+            }}
+          >
+            <GoogleTranslate />
+            <LanguageIcon />
+          </Box>
 
           {/* Language Selector - show on all devices but compact on mobile */}
-          <FormControl size="small">
+          {/* <FormControl size="small">
             <Select
               value={selectedLanguage}
               onChange={handleLanguageChange}
@@ -304,7 +330,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
                 DE
               </MenuItem>
             </Select>
-          </FormControl>
+          </FormControl> */}
 
           {/* Notifications */}
           <Tooltip title="Notifications">
