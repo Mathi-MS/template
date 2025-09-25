@@ -1,11 +1,8 @@
-import MenuIcon from "@mui/icons-material/Menu";
-import SearchIcon from "@mui/icons-material/Search";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import LogoutIcon from "@mui/icons-material/Logout";
-import SupportIcon from "@mui/icons-material/Support";
 import LanguageIcon from "@mui/icons-material/Language";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -135,7 +132,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         top: 0,
         zIndex: 10,
         backgroundColor: "var(--white)",
-        borderBottom: "1px solid var(--border-color)",
+        borderBottom: "1px solid var(--border)",
       }}
     >
       <Box

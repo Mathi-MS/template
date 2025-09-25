@@ -46,9 +46,11 @@ body .MuiTypography-root {
   --text-primary: #1d2939;
   --text-secondary: #667085;
   --border: #d0d5dd;
+  --border-light: #d0d5dd71;
   --primary-dark:#161950;
   --text-secondary-dark:#98a2b3;
-  --background:#98a2b3;
+  --background:#f9fafb;
+  --backgroundInner:#f2f4f7;
   --error:#d92d20;
   --error-light:#fef3f2;
   --success:#038a55;
@@ -67,7 +69,7 @@ body .MuiTypography-root {
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--primary);
+  background: rgb(194, 193, 193);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {

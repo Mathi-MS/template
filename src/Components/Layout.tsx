@@ -3,6 +3,8 @@ import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { MobileBottomNavigation } from "./BottomNavigation";
+import { Breadcrumb } from "./Breadcrumb";
+import { BreadcrumbProvider } from "../Context/BreadcrumbContext";
 import { Outlet, useNavigate } from "react-router-dom";
 
 const drawerWidth = 260;
@@ -35,79 +37,82 @@ export const Layout = () => {
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        minHeight: "100vh",
-        backgroundColor: "var(--background)",
-        color: "var(--text-primary)",
-      }}
-    >
-      {/* Left Sidebar - Desktop Only */}
-      {isDesktop && !sidebarCollapsed && (
-        <Box component="nav" sx={{ width: drawerWidth, flexShrink: 0 }}>
-          <Box
+    <BreadcrumbProvider>
+      <Box
+        sx={{
+          display: "flex",
+          minHeight: "100vh",
+          backgroundColor: "var(--background)",
+          color: "var(--text-primary)",
+        }}
+      >
+        {/* Left Sidebar - Desktop Only */}
+        {isDesktop && !sidebarCollapsed && (
+          <Box component="nav" sx={{ width: drawerWidth, flexShrink: 0 }}>
+            <Box
+              sx={{
+                width: drawerWidth,
+                height: "100vh",
+                position: "sticky",
+                top: 0,
+                borderRight: "1px solid var(--border-color)",
+                backgroundColor: "var(--white)",
+              }}
+            >
+              <Sidebar />
+            </Box>
+          </Box>
+        )}
+
+        {/* Mobile Drawer - Hidden by default, only for special cases */}
+        {!isDesktop && (
+          <Drawer
+            anchor="left"
+            open={mobileOpen}
+            onClose={handleCloseMobile}
+            ModalProps={{ keepMounted: true }}
             sx={{
-              width: drawerWidth,
-              height: "100vh",
-              position: "sticky",
-              top: 0,
-              borderRight: "1px solid var(--border-color)",
-              backgroundColor: "var(--white)",
+              display: "none", // Hide mobile drawer since we're using bottom nav
+              "& .MuiDrawer-paper": {
+                width: drawerWidth,
+                boxSizing: "border-box",
+              },
             }}
           >
             <Sidebar />
+          </Drawer>
+        )}
+
+        {/* Right Content: Header (top) + Dashboard (bottom) */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Header
+            onMenuClick={handleToggleSidebar}
+            isSidebarCollapsed={isDesktop ? sidebarCollapsed : false}
+          />
+          <Box
+            sx={{
+              flex: 1,
+              overflow: "auto",
+              p: { xs: 2, md: 3 },
+              pb: { xs: 10, md: 3 }, // Add bottom padding on mobile for bottom nav
+            }}
+          >
+            <Breadcrumb />
+            <Outlet />
           </Box>
         </Box>
-      )}
 
-      {/* Mobile Drawer - Hidden by default, only for special cases */}
-      {!isDesktop && (
-        <Drawer
-          anchor="left"
-          open={mobileOpen}
-          onClose={handleCloseMobile}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: "none", // Hide mobile drawer since we're using bottom nav
-            "& .MuiDrawer-paper": {
-              width: drawerWidth,
-              boxSizing: "border-box",
-            },
-          }}
-        >
-          <Sidebar />
-        </Drawer>
-      )}
-
-      {/* Right Content: Header (top) + Dashboard (bottom) */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          minWidth: 0,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Header
-          onMenuClick={handleToggleSidebar}
-          isSidebarCollapsed={isDesktop ? sidebarCollapsed : false}
-        />
-        <Box
-          sx={{
-            flex: 1,
-            overflow: "auto",
-            p: { xs: 2, md: 3 },
-            pb: { xs: 10, md: 3 }, // Add bottom padding on mobile for bottom nav
-          }}
-        >
-          <Outlet />
-        </Box>
+        {/* Mobile Bottom Navigation */}
+        {isMobile && <MobileBottomNavigation />}
       </Box>
-
-      {/* Mobile Bottom Navigation */}
-      {isMobile && <MobileBottomNavigation />}
-    </Box>
+    </BreadcrumbProvider>
   );
 };

@@ -17,11 +17,13 @@ import {
   Divider,
   TextField,
   InputAdornment,
+  Tooltip,
 } from "@mui/material";
 import CustomButton from "./CustomButton";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { CustomInputStyles } from "../assets/Styles/CustomStyles";
+import { RiSearchLine } from "react-icons/ri";
 interface Column {
   id: string;
   label: string;
@@ -203,7 +205,14 @@ export default function CustomNew({
       {/* Header title row */}
       {title && (
         <Box p={2}>
-          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontFamily: "SemiBold_M",
+              color: "var(--text-primary)",
+              fontSize: "16px",
+            }}
+          >
             {title}
           </Typography>
         </Box>
@@ -216,10 +225,18 @@ export default function CustomNew({
         px={2}
         py={1.5}
         gap={1.5}
+        sx={{ "@media (max-width: 600px)": { flexDirection: "column" } }}
       >
         {/* Global search */}
         {search && (
-          <Box sx={{ flex: 1, maxWidth: 220, ...CustomInputStyles }}>
+          <Box
+            sx={{
+              flex: 1,
+              maxWidth: 220,
+              ...CustomInputStyles,
+              "@media (max-width: 600px)": { maxWidth: "100%", width: "100%" },
+            }}
+          >
             <TextField
               size="small"
               placeholder="Search"
@@ -232,7 +249,7 @@ export default function CustomNew({
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
+                    <RiSearchLine fontSize="small" />
                   </InputAdornment>
                 ),
                 sx: { fontSize: "12px", height: 36 },
@@ -241,9 +258,15 @@ export default function CustomNew({
           </Box>
         )}
 
-        <Box sx={{ display: "flex", gap: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1,
+            "@media (max-width: 600px)": { width: "100%" },
+          }}
+        >
           {colvis && (
-            <Box>
+            <Box sx={{ "@media (max-width: 600px)": { width: "100%" } }}>
               <CustomButton
                 type="button"
                 size="small"
@@ -251,25 +274,43 @@ export default function CustomNew({
                 label="Colvis"
                 endIcon={<ArrowDropDownIcon />}
                 onClick={handleOpenMenu}
+                boxSx={{
+                  backgroundColor: "transparent",
+                  color: "var(--text-secondary)",
+                  boxShadow: "none",
+                  border: "1px solid #e0e0e0",
+                  padding: "5px 20px",
+                  ":hover": { boxShadow: "none" },
+                }}
               />
               <Menu
                 anchorEl={anchorEl}
                 open={openMenu}
                 onClose={handleCloseMenu}
-                sx={{ maxHeight: "300px" }}
+                sx={{ maxHeight: "300px", }}
               >
                 <Box display="flex" gap={1} px={1.5} py={1}>
                   <Button
                     size="small"
                     onClick={selectAllColumns}
-                    sx={{ textTransform: "none", fontSize: "11px" }}
+                    sx={{
+                      textTransform: "none",
+                      fontSize: "11px",
+                      fontFamily: "Medium_M",
+                      color: "var(--text-secondary)",
+                    }}
                   >
                     Select All
                   </Button>
                   <Button
                     size="small"
                     onClick={clearAllColumns}
-                    sx={{ textTransform: "none", fontSize: "11px" }}
+                    sx={{
+                      textTransform: "none",
+                      fontSize: "11px",
+                      fontFamily: "Medium_M",
+                      color: "var(--text-secondary)",
+                    }}
                   >
                     Clear All
                   </Button>
@@ -287,9 +328,20 @@ export default function CustomNew({
                       sx={{
                         mr: 1,
                         "&.Mui-checked": { color: "var(--primary)" },
+                        fontSize: "11px",
+                        fontFamily: "Medium_M",
+                        color: "var(--text-secondary)",
+                        padding: 0,
                       }}
                     />
-                    <Typography variant="body2" sx={{ fontSize: "12px" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: "12px",
+                        fontFamily: "Medium_M",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
                       {col.label}
                     </Typography>
                   </MenuItem>
@@ -300,13 +352,25 @@ export default function CustomNew({
 
           {/* Export CSV button */}
           {exportBoolean && (
-            <CustomButton
-              type="button"
-              size="small"
-              variant="contained"
-              label="Export"
-              onClick={exportToCSV}
-            />
+            <Tooltip title="Export to CSV">
+              <span>
+                <CustomButton
+                  type="button"
+                  size="small"
+                  variant="contained"
+                  label="Export"
+                  onClick={exportToCSV}
+                  boxSx={{
+                    backgroundColor: "transparent",
+                    color: "var(--text-secondary)",
+                    boxShadow: "none",
+                    border: "1px solid #e0e0e0",
+                    padding: "5px 20px",
+                    ":hover": { boxShadow: "none" },
+                  }}
+                />
+              </span>
+            </Tooltip>
           )}
         </Box>
       </Box>
@@ -323,6 +387,8 @@ export default function CustomNew({
                     ? "5px 8px"
                     : { xs: "10px 12px", sm: "15px 18px" },
                   whiteSpace: "nowrap",
+                  fontFamily: "Medium_M",
+                  border: "solid 1px var(--border-light)",
                 },
               }}
             >
@@ -386,6 +452,9 @@ export default function CustomNew({
                         fontSize: "12px",
                         borderBottom: "1px solid #f0f0f0",
                         padding: showCheckbox ? "5px 8px" : "10px 18px",
+                        fontFamily: "Medium_M",
+                        color: "var(--text-secondary)",
+                        border: "solid 1px var(--border-light)",
                       },
                     }}
                   >
@@ -445,12 +514,16 @@ export default function CustomNew({
         alignItems="center"
         px={2}
         py={1.5}
-        borderTop="1px solid #e0e0e0"
+        borderTop="1px solid var(--border)"
       >
         <Typography
           variant="body2"
           color="textSecondary"
-          sx={{ fontSize: "12px" }}
+          sx={{
+            fontSize: "12px",
+            fontFamily: "Regular_M",
+            "@media (max-width: 600px)": { display: "none" },
+          }}
         >
           Page {page + 1} of {totalPages}
         </Typography>
@@ -465,6 +538,7 @@ export default function CustomNew({
               fontSize: "12px",
               color: "var(--titleThird)",
               border: "solid 1px var(--borderColor)",
+              fontFamily: "Regular_M",
             }}
           >
             Previous
@@ -479,6 +553,7 @@ export default function CustomNew({
               fontSize: "12px",
               color: "var(--titleThird)",
               border: "solid 1px var(--borderColor)",
+              fontFamily: "Regular_M",
             }}
           >
             Next
