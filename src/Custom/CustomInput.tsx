@@ -36,7 +36,6 @@ export const CustomInput = ({
 
         <TextField
           placeholder={placeholder}
-          // focused
           color="primary"
           name={name}
           value={value}

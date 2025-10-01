@@ -44,7 +44,7 @@ body .MuiTypography-root {
   --primary: #465fff;
   --secondary: #ecf3ff;
   --text-primary: #1d2939;
-  --text-secondary: #667085;
+  --text-secondary: #8d9394;
   --border: #d0d5dd;
   --border-light: #d0d5dd71;
   --primary-dark: #161950;
@@ -77,7 +77,7 @@ body .MuiTypography-root {
 }
 /* Tooltip  5*/
 .MuiTooltip-popper {
-  z-index: 99999 !important;
+  z-index: 9999999999 !important;
 }
 /* Input Arrow Hide  */
 /* Chrome, Safari, Edge, Opera */

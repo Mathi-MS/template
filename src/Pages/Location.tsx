@@ -7,17 +7,17 @@ import { showError, showSuccess } from "../Custom/CustomToast";
 import { HiOutlinePencil } from "react-icons/hi";
 import { MdOutlineDeleteOutline } from "react-icons/md";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
-import CityModel from "../Model/CityModel";
+import LocationModel from "../Model/LocationModel";
 
 interface Row {
   id: string;
   sno: number;
-  cityId: string;
+  locationId: string;
+  location: string;
   city: string;
-  locations: string;
 }
 
-export const City = () => {
+export const Location = () => {
   const [open, setOpen] = useState(false);
   const [userData, setUserData] = useState({});
   const [isEdit, setIsEdit] = useState(false);
@@ -31,150 +31,99 @@ export const City = () => {
     {
       id: "1",
       sno: 1,
-      cityId: "C001",
+      locationId: "L001",
+      location: "Anna Nagar",
       city: "Chennai",
-      locations: "Anna Nagar, T Nagar, Velachery, Adyar",
     },
     {
       id: "2",
       sno: 2,
-      cityId: "C002",
-      city: "Bengaluru",
-      locations: "Whitefield, Koramangala, Indiranagar",
+      locationId: "L002",
+      location: "T Nagar",
+      city: "Chennai",
     },
     {
       id: "3",
       sno: 3,
-      cityId: "C003",
-      city: "Hyderabad",
-      locations: "Madhapur, Gachibowli, Banjara Hills, Jubilee Hills",
+      locationId: "L003",
+      location: "Velachery",
+      city: "Chennai",
     },
     {
       id: "4",
       sno: 4,
-      cityId: "C004",
-      city: "Mumbai",
-      locations: "Andheri, Bandra, Powai, Dadar",
+      locationId: "L004",
+      location: "Whitefield",
+      city: "Bengaluru",
     },
     {
       id: "5",
       sno: 5,
-      cityId: "C005",
-      city: "Delhi",
-      locations: "Connaught Place, Saket, Dwarka",
+      locationId: "L005",
+      location: "Koramangala",
+      city: "Bengaluru",
     },
     {
       id: "6",
       sno: 6,
-      cityId: "C006",
-      city: "Kolkata",
-      locations: "Salt Lake, Howrah, Park Street",
+      locationId: "L006",
+      location: "Madhapur",
+      city: "Hyderabad",
     },
     {
       id: "7",
       sno: 7,
-      cityId: "C007",
-      city: "Pune",
-      locations: "Kothrud, Baner, Hinjewadi",
+      locationId: "L007",
+      location: "Gachibowli",
+      city: "Hyderabad",
     },
     {
       id: "8",
       sno: 8,
-      cityId: "C008",
-      city: "Coimbatore",
-      locations: "RS Puram, Peelamedu, Singanallur",
+      locationId: "L008",
+      location: "Andheri",
+      city: "Mumbai",
     },
     {
       id: "9",
       sno: 9,
-      cityId: "C009",
-      city: "Jaipur",
-      locations: "Vaishali Nagar, Malviya Nagar, C-Scheme",
+      locationId: "L009",
+      location: "Connaught Place",
+      city: "Delhi",
     },
     {
       id: "10",
       sno: 10,
-      cityId: "C010",
-      city: "Ahmedabad",
-      locations: "Navrangpura, Bopal, Satellite",
+      locationId: "L010",
+      location: "Salt Lake",
+      city: "Kolkata",
     },
   ];
 
   const columns = [
     { id: "sno", label: "S.No" },
-    { id: "cityId", label: "City ID" },
+    { id: "locationId", label: "Location ID" },
+    { id: "location", label: "Location" },
     { id: "city", label: "City" },
-    {
-      id: "locations",
-      label: "Locations",
-      render: (row: Row) => {
-        const locationsArray = row.locations.split(", ");
-        const displayLocations = locationsArray.slice(0, 2);
-        const remainingLocations = locationsArray.slice(2);
-
-        return (
-          <Box sx={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            {displayLocations.map((loc: string, index: number) => (
-              <Chip
-                key={index}
-                label={loc}
-                sx={{
-                  backgroundColor: "var(--backgroundInner)",
-                  color: "var(--primary)",
-                  border: "solid 1px var(--border)",
-                  fontWeight: 500,
-                  borderRadius: "4px",
-                  fontFamily: "Medium_M",
-                }}
-                size="small"
-              />
-            ))}
-
-            {remainingLocations.length > 0 && (
-              <Tooltip
-                title={
-                  <Box sx={{ display: "flex", flexDirection: "column", p: 1 }}>
-                    {remainingLocations.map((loc: string, index: number) => (
-                      <Typography key={index} variant="body2">
-                        • {loc}
-                      </Typography>
-                    ))}
-                  </Box>
-                }
-                arrow
-                placement="top"
-              >
-                <Chip
-                  label={`+${remainingLocations.length} more`}
-                  sx={{
-                    backgroundColor: "var(--primary)",
-                    color: "var(--backgroundInner)",
-                    border: "solid 1px var(--border)",
-                    fontWeight: 500,
-                    borderRadius: "4px",
-                    fontFamily: "Medium_M",
-                  }}
-                  size="small"
-                />
-              </Tooltip>
-            )}
-          </Box>
-        );
-      },
-    },
     {
       id: "action",
       label: "Action",
       render: (row: any) => (
         <Box sx={{ display: "flex", gap: "8px" }}>
           <IconButton onClick={() => handleView(row)} size="small">
-            <MdOutlineRemoveRedEye  style={{ color: "var(--grey)", fontSize: "16px" }} />
+            <MdOutlineRemoveRedEye
+              style={{ color: "var(--grey)", fontSize: "16px" }}
+            />
           </IconButton>
           <IconButton onClick={() => handleEdit(row)} size="small">
-            <HiOutlinePencil   style={{ color: "var(--grey)", fontSize: "16px" }} />
+            <HiOutlinePencil
+              style={{ color: "var(--grey)", fontSize: "16px" }}
+            />
           </IconButton>
           <IconButton onClick={() => openDelete(row)} size="small">
-            <MdOutlineDeleteOutline  style={{ color: "var(--grey)", fontSize: "16px" }} />
+            <MdOutlineDeleteOutline
+              style={{ color: "var(--grey)", fontSize: "16px" }}
+            />
           </IconButton>
         </Box>
       ),
@@ -236,7 +185,7 @@ export const City = () => {
         }}
       >
         <CustomButton
-          label="Add City"
+          label="Add Location"
           type="submit"
           variant="contained"
           startIcon={<AddIcon />}
@@ -256,10 +205,10 @@ export const City = () => {
         colvis={true}
         search={true}
         exportBoolean={true}
-        title="City List"
+        title="Location List"
       />
 
-       <CityModel
+      <LocationModel
         open={open}
         onClose={handleClose}
         onSubmit={onsubmit}

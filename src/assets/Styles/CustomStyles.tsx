@@ -32,7 +32,7 @@ export const CustomInputStyles = {
     },
     "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
       borderColor: "var(--border)",
-      borderWidth: "1.5px",
+      borderWidth: "1px",
     },
     "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline": {
       borderColor: "var(--error)",
@@ -74,13 +74,14 @@ export const CustomAutocompleteStyles = {
     color: "var(--title)",
   },
   "& fieldset": {
-    borderWidth: "1.5px !important",
+    borderWidth: "1px !important",
     borderColor: "var(--border) !important",
-    borderRadius: "5px",
+    borderRadius: "8px",
   },
   "& .Mui-error .MuiOutlinedInput-notchedOutline ": {
-    borderWidth: "1.5px !important",
+    borderWidth: "1px !important",
     borderColor: "var(--error) !important",
-    borderRadius: "5px",
+    borderRadius: "8px",
+    fontSize:"Regular_M"
   },
 };

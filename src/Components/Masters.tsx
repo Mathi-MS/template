@@ -1,6 +1,7 @@
 import { useState, } from "react";
 import { Box, Tabs, Tab, Typography } from "@mui/material";
 import { City } from "../Pages/City";
+import { Location } from "../Pages/Location";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -82,7 +83,7 @@ export const Masters = () => {
         <City />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        Location Content here
+        <Location />
       </TabPanel>
       <TabPanel value={value} index={2}>
         Location Cost Content here

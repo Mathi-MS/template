@@ -1,5 +1,9 @@
-import { Autocomplete, Box, TextField } from "@mui/material";
-import { CustomAutocompleteStyles, CustomInputStyles } from "../assets/Styles/CustomStyles";
+import { Autocomplete, Box, TextField, Tooltip, Typography } from "@mui/material";
+import {
+  CustomAutocompleteStyles,
+  CustomInputStyles,
+  labelStyle,
+} from "../assets/Styles/CustomStyles";
 import get from "lodash/get";
 import { Controller } from "react-hook-form";
 
@@ -24,6 +28,12 @@ export const CustomAutocomplete = ({
 
   return (
     <>
+    <Tooltip title={label} arrow>
+          <Typography sx={{...labelStyle}} component={"span"}>
+            {label.length > 20 ? label.slice(0, 20) + "..." : label}
+          </Typography>
+        </Tooltip>
+        {required && <Box component={"span"} color={"var(--error)"}>*</Box>}
       <Controller
         name={name}
         control={control}
@@ -33,6 +43,11 @@ export const CustomAutocomplete = ({
             limitTags={limitTags}
             options={options || []}
             getOptionLabel={(option) => option.label}
+            renderOption={(props, option) => (
+              <Box component="li" {...props} sx={{ fontFamily: "Regular_M",fontSize:"14px",padding:"8px 12px !important", }}>
+                {option.label}
+              </Box>
+            )}
             value={
               multiple
                 ? options.filter((opt: any) => field.value?.includes(opt.title))
@@ -52,12 +67,6 @@ export const CustomAutocomplete = ({
             renderInput={(params) => (
               <TextField
                 {...params}
-                label={
-                  <>
-                    {label}
-                    {required && <Box component={"span"}>*</Box>}
-                  </>
-                }
                 placeholder={placeholder}
                 error={!!errorMessage}
                 helperText={errorMessage ? errorMessage.toString() : helperText}
@@ -68,7 +77,7 @@ export const CustomAutocomplete = ({
                 }}
               />
             )}
-            sx={{ width: "100%", marginTop: "10px" }}
+            sx={{ width: "100%",}}
           />
         )}
       />
@@ -76,11 +85,10 @@ export const CustomAutocomplete = ({
   );
 };
 
-
-// SINGLE 
+// SINGLE
 // company: z.string().min(1, { message: "Company is required" }).nullable(),
 
-// MULTIPLE 
+// MULTIPLE
 // company: z
 //     .array(z.string().min(1))
 //     .min(1, { message: "Company is required" }),
