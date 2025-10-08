@@ -1,40 +1,53 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  BottomNavigation,
-  BottomNavigationAction,
-  Box,
-  Paper,
-} from "@mui/material";
-import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
-import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
-import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import { BottomNavigation, BottomNavigationAction, Paper } from "@mui/material";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
+import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { useUser } from "../Config/userContext"; // ✅ import user context
 
 export const MobileBottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useUser(); // get logged-in user info
+  const role = user?.user?.role?.toLowerCase();
 
-  const navItems = [
-    {
-      label: "Dashboard",
-      path: "/dashboard",
-      icon: <DashboardOutlinedIcon />,
-    },
-    {
-      label: "Tickets",
-      path: "/tickets",
-      icon: <ReceiptLongOutlinedIcon />,
-    },
-    {
-      label: "Masters",
-      path: "/masters",
-      icon: <ManageAccountsOutlinedIcon />,
-    },
-  ];
+  // Define nav items
+  let navItems = [];
+
+  if (role === "user") {
+    // Only show "Create Ride" and "Help"
+    navItems = [
+      {
+        label: "Create Ride",
+        path: "/create-ride",
+        icon: <AddCircleOutlineIcon />,
+      },
+      { label: "Help", path: "/help", icon: <HelpOutlineIcon /> },
+    ];
+  } else {
+    // Full menu for other roles
+    navItems = [
+      {
+        label: "Dashboard",
+        path: "/dashboard",
+        icon: <DashboardOutlinedIcon />,
+      },
+      { label: "Tickets", path: "/tickets", icon: <ReceiptLongOutlinedIcon /> },
+      {
+        label: "Masters",
+        path: "/masters",
+        icon: <ManageAccountsOutlinedIcon />,
+      },
+    ];
+  }
 
   // Find current active index
-  const currentIndex = navItems.findIndex(item => location.pathname === item.path);
+  const currentIndex = navItems.findIndex(
+    (item) => location.pathname === item.path
+  );
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     navigate(navItems[newValue].path);
@@ -43,13 +56,13 @@ export const MobileBottomNavigation = () => {
   return (
     <Paper
       sx={{
-        position: 'fixed',
+        position: "fixed",
         bottom: 0,
         left: 0,
         right: 0,
         zIndex: 1000,
-        borderTop: '1px solid var(--border-color)',
-        backgroundColor: 'var(--white)',
+        borderTop: "1px solid var(--border-color)",
+        backgroundColor: "var(--white)",
       }}
       elevation={3}
     >
@@ -58,24 +71,24 @@ export const MobileBottomNavigation = () => {
         onChange={handleChange}
         sx={{
           height: 70,
-          '& .MuiBottomNavigationAction-root': {
-            color: 'var(--text-secondary)',
-            fontSize: '12px',
-            fontFamily: 'Regular_M',
-            '&.Mui-selected': {
-              color: 'var(--primary)',
+          "& .MuiBottomNavigationAction-root": {
+            color: "var(--text-secondary)",
+            fontSize: "12px",
+            fontFamily: "Regular_M",
+            "&.Mui-selected": {
+              color: "var(--primary)",
             },
           },
-          '& .MuiBottomNavigationAction-label': {
-            fontSize: '11px',
-            fontFamily: 'Regular_M',
-            '&.Mui-selected': {
-              fontSize: '11px',
+          "& .MuiBottomNavigationAction-label": {
+            fontSize: "11px",
+            fontFamily: "Regular_M",
+            "&.Mui-selected": {
+              fontSize: "11px",
             },
           },
         }}
       >
-        {navItems.map((item, index) => (
+        {navItems.map((item) => (
           <BottomNavigationAction
             key={item.path}
             label={item.label}

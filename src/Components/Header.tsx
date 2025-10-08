@@ -30,6 +30,7 @@ import { CustomInput } from "../Custom/CustomInput";
 import { RiSearchLine } from "react-icons/ri";
 import { keyframes } from "@mui/material";
 import { GoogleTranslate } from "./GoogleTranslate";
+import { useUser } from "../Config/userContext";
 
 // Badge pulse animation
 const badgePulse = keyframes`
@@ -71,6 +72,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   );
   const [notificationAnchorEl, setNotificationAnchorEl] =
     useState<null | HTMLElement>(null);
+  const {user, logout } = useUser();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const navigate = useNavigate();
@@ -108,7 +110,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
 
   const handleSignOut = () => {
     closeProfile();
-    Cookies.remove("authToken"); // Adjust based on your auth implementation
+    logout();
     navigate("/login");
   };
 
@@ -117,11 +119,10 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     navigate("/support");
   };
 
-  // Mock user data - replace with actual user data
   const userData = {
-    name: "John Doe",
-    userId: "JD001",
-    avatar: "/path/to/avatar.jpg", // Replace with actual avatar path
+    name: user?.user?.username || "John Doe",
+    userId: user?.user?.userId || "JD001",
+    avatar: "/path/to/avatar.jpg",
   };
 
   return (
@@ -283,7 +284,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
               },
             }}
           >
-            <GoogleTranslate />
+            {/* <GoogleTranslate /> */}
             <LanguageIcon />
           </Box>
 

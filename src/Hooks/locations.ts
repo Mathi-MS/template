@@ -4,62 +4,69 @@ import type { ApiResponse } from "../Interface/Custom";
 import { useApi } from "../api/apiService";
 import { showSuccess } from "../Custom/CustomToast";
 
-export const useGetCities = () => {
+// GET LOCATIONS
+export const useGetLocations = () => {
   const { callApi } = useApi();
   return useQuery({
-    queryKey: ["cityList"],
+    queryKey: ["locationList"],
     queryFn: async () => {
-      const response = await callApi(`${apiUrls.city}`, "GET");
+      const response = await callApi(`${apiUrls.location}`, "GET");
       return (response as ApiResponse).data;
     },
     refetchOnWindowFocus: true,
   });
 };
 
-export const useCityCreate = () => {
+// CREATE LOCATION
+export const useCreateLocation = () => {
   const queryClient = useQueryClient();
   const { callApi } = useApi();
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await callApi(`${apiUrls.city}`, "POST", data);
+      const response = await callApi(`${apiUrls.location}`, "POST", data);
       return response as ApiResponse;
     },
     onSuccess: () => {
-          showSuccess("City Created Successfully");
-          queryClient.invalidateQueries({ queryKey: ["cityList"] });
-        },
+      showSuccess("Location Created Successfully");
+      queryClient.invalidateQueries({ queryKey: ["locationList"] });
+    },
+    onError: (error) => {
+      console.log(error);
+    },
   });
 };
 
-export const useUpdateCity = () => {
+// UPDATE LOCATION
+export const useUpdateLocation = () => {
   const queryClient = useQueryClient();
   const { callApi } = useApi();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const response = await callApi(`${apiUrls.city}/${id}`, "PUT", data);
+      const response = await callApi(`${apiUrls.location}/${id}`, "PUT", data);
       return response as ApiResponse;
     },
     onSuccess: () => {
-      showSuccess("City updated Successfully");
-      queryClient.invalidateQueries({ queryKey: ["cityList"] });
+      showSuccess("Location updated Successfully");
+      queryClient.invalidateQueries({ queryKey: ["locationList"] });
     },
   });
 };
 
-export const useDeleteCity = () => {
+// DELETE LOCATION
+export const useDeleteLocation = () => {
   const queryClient = useQueryClient();
   const { callApi } = useApi();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await callApi(`${apiUrls.city}/${id}`, "DELETE");
+      const response = await callApi(`${apiUrls.location}/${id}`, "DELETE");
       return response as ApiResponse;
     },
     onSuccess: () => {
-      showSuccess("City deleted Successfully");
-      queryClient.invalidateQueries({ queryKey: ["cityList"] });
+      showSuccess("Location deleted Successfully");
+      queryClient.invalidateQueries({ queryKey: ["locationList"] });
     },
   });
 };

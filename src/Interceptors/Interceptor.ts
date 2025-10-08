@@ -6,6 +6,11 @@ import config from "../Config/Config";
 axios.defaults.timeout = 25000;
 let setIsLoading: (isLoading: boolean) => void = () => {};
 let setTimeOutModal: (isTimeOut: boolean) => void = () => {};
+let logoutCallback: () => void = () => {};
+
+export const setLogoutCallback = (callback: () => void) => {
+  logoutCallback = callback;
+};
 
 export const setLoaderCallback = (callback: (isLoading: boolean) => void) => {
   setIsLoading = callback;
@@ -23,11 +28,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = Cookies.get("CKIA_token");
     setIsLoading(true);
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {
@@ -46,6 +47,11 @@ api.interceptors.response.use(
     if (error.code === "ECONNABORTED") {
       setTimeOutModal(true);
     }
+    if(error?.response?.status === 401){
+       logoutCallback();
+      window.location.hash = "/login";
+    }
+    
     return Promise.reject(error);
   }
 );

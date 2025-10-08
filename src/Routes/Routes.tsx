@@ -2,13 +2,14 @@ import { createHashRouter } from "react-router-dom";
 import { Layout } from "../Components/Layout";
 import { Login } from "../Auth/Login";
 import { Dashboard } from "../Components/Dashboard";
-import { Tickets } from "../Components/Tickets";
+import { Tickets } from "../Pages/Tickets";
 import { Masters } from "../Components/Masters";
 import { Profile } from "../Components/Profile";
 import { ProtectedRoute, PublicOnlyRoute } from "./ProtectedRoutes";
 import Timeout from "../Components/Timeout";
 import { ForgetPassword } from "../Auth/ForgetPassword";
 import { ResetPassword } from "../Auth/ResetPassword";
+import { CreateRide } from "../Pages/Ride";
 
 const routes = createHashRouter([
   {
@@ -50,6 +51,10 @@ const routes = createHashRouter([
       {
         path: "profile",
         element: <Profile />,
+      },
+      {
+        path: "ride",
+        element: <CreateRide />,
       },
     ],
   },

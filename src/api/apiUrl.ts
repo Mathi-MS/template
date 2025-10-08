@@ -1,5 +1,12 @@
 export const apiUrls = {
-  login: "login",
+  login: "auth/sign-in",
   logout: "logout",
-  cityCreate:"city/create"
+  city:"city",
+  location:"location",
+  locationCostbyCity:"locationcost/city",
+  locationCost:"locationcost",
+  vendor:"vendor",
+  transport:"transport",
+  user:"user",
+  rideTicket:"ride-ticket",
 };

@@ -1,83 +1,64 @@
-
-import Cookies from "js-cookie";
+import { useUser } from "../Config/userContext";
 import api from "../Interceptors/Interceptor";
 import type { ApiError, ApiRequestConfig, ApiResponse, HttpMethod } from "../Interface/Custom";
-import { showError } from "../Custom/CustomToast";
+import { apiUrls } from "./apiUrl";
+// import { apiUrls } from "./apiUrl";
 
-// Function overloads for better type safety
-export async function callApi<T>(
-  url: string,
-  method: HttpMethod,
-  data?: any,
-  headers?: Record<string, string>,
-  responseType?: "json"
-): Promise<ApiResponse<T>>;
+export const useApi = () => {
+  const { user } = useUser();
+  const token = user?.token;
 
-export async function callApi<T>(
-  url: string,
-  method: HttpMethod,
-  data: any,
-  headers: Record<string, string>,
-  responseType: "arraybuffer"
-): Promise<ArrayBuffer>;
-
-export async function callApi<T>(
-  url: string,
-  method: HttpMethod,
-  data: any = null,
-  headers: Record<string, string> = {},
-  responseType: "json" | "arraybuffer" = "json"
-): Promise<ApiResponse<T> | ArrayBuffer> {
-  const token = Cookies.get("accessToken");
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  const config: ApiRequestConfig = {
-    method,
-    url,
-    headers,
-    responseType,
-    ...(data && { data }),
-  };
-
-  try {
-    const response = await api.request(config);
-    if (
-      responseType === "arraybuffer" &&
-      response.data instanceof ArrayBuffer
-    ) {
-      return response.data;
+  const callApi = async <T>(
+    url: string,
+    method: HttpMethod,
+    data: any = null,
+    headers: Record<string, string> = {},
+    responseType: "json" | "arraybuffer" = "json"
+  ): Promise<ApiResponse<T> | ArrayBuffer> => {
+    if (token && url !== apiUrls.login) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
-    if (responseType === "json" && typeof response.data === "object" || "string") {
-      const responseData = response.data as ApiResponse<T> || response;
+    const config: ApiRequestConfig = {
+      method,
+      url,
+      headers,
+      responseType,
+      withCredentials: true,
+      ...(data && { data }),
+    };
 
-      if (method === "DELETE") {
-        showError("Something went wrong");
-      } else if (method !== "GET") {
-        // successnotify(responseData.message || "Login Successfull");
+    try {
+      const response = await api.request(config);
+
+      if (
+        responseType === "arraybuffer" &&
+        response.data instanceof ArrayBuffer
+      ) {
+        return response.data;
       }
 
-      return responseData;
-    }
+      if (responseType === "json" && typeof response.data === "object") {
+        const responseData = response.data as ApiResponse<T>;
+        return responseData;
+      }
 
-    throw new Error("Unexpected response type");
-  } catch (error) {
-    const axiosError = error as {
-      response?: {
-        status: number;
-        data?: { message?: string; errors?: Record<string, string> };
-        loading?: boolean;
+      throw new Error("Unexpected response type");
+    } catch (error) {
+      const axiosError = error as {
+        response?: {
+          status: number;
+          data?: { message?: string; errors?: Record<string, string> };
+        };
       };
-    };
-    const apiError: ApiError = {
-      status: axiosError.response?.status ?? 0,
-      message: axiosError.response?.data?.message ?? "An error occurred",
-      errors: axiosError.response?.data?.errors ,
-      rawResponse: axiosError.response?.data,
-      loading:false
-    };
-    throw apiError;
-  }
-}
+      const apiError: ApiError = {
+        status: axiosError.response?.status ?? 0,
+        message: axiosError.response?.data?.message ?? "An error occurred",
+        errors: axiosError.response?.data?.errors,
+      };
+      throw apiError;
+    }
+  };
+
+  return { callApi };
+};

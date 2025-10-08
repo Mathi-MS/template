@@ -5,6 +5,8 @@ import routes from "./Routes/Routes";
 import { RouterProvider } from "react-router-dom";
 import  { useEffect, useState } from "react";
 import LoaderSplash from "./Components/LoaderSplash";
+import { UserProvider } from "./Config/userContext";
+import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -14,13 +16,16 @@ const App = () => {
     const timer = setTimeout(() => setShowSplash(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+  const queryClient = new QueryClient();
 
   return (
     <>
-      <ReactQueryProvider>
-        {showSplash ? <LoaderSplash /> : <RouterProvider router={routes} />}
-      </ReactQueryProvider>
-      <CustomToast />
+      <UserProvider>
+        <QueryClientProvider client={queryClient}>
+          {showSplash ? <LoaderSplash /> : <RouterProvider router={routes} />}
+        </QueryClientProvider>
+        <CustomToast />
+      </UserProvider>
     </>
   );
 };

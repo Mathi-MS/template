@@ -3,82 +3,117 @@ import CustomButton from "../Custom/CustomButton";
 import AddIcon from "@mui/icons-material/Add";
 import { useState } from "react";
 import CustomTable from "../Custom/CustomTable";
-import { showError, showSuccess } from "../Custom/CustomToast";
+import { showError } from "../Custom/CustomToast";
 import { HiOutlinePencil } from "react-icons/hi";
-import { MdOutlineDeleteOutline } from "react-icons/md";
-import { MdOutlineRemoveRedEye } from "react-icons/md";
-import CityModel from "../Model/CityModel";
-import { useGetCities } from "../Hooks/city";
+import { MdOutlineDeleteOutline, MdOutlineRemoveRedEye } from "react-icons/md";
+import DeleteConfirmationModal from "../Model/DeleteModel";
+import LocationCostModel from "../Model/LOcationCostModel";
+import { useGetLocationCosts } from "../Hooks/locationcost";
 
 interface Row {
   id: string;
   sno: number;
-  cityId: string;
+  locationCostId: string;
+  locationName: string;
   city: string;
-  locations: string[];
+  cost: number;
 }
 
-export const City = () => {
+export interface LocationCost {
+  id?: string;
+  locationCostId: string;
+  locationName: string;
+  city: string;
+  cost: number;
+}
+
+export const LocationCost = () => {
   const [open, setOpen] = useState(false);
   const [userData, setUserData] = useState({});
   const [isEdit, setIsEdit] = useState(false);
+  const [isLocationCost, setIsLocationCost] = useState(false);
   const [isView, setIsView] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<string>("");
 
-  const { data } = useGetCities();
+  const { data } = useGetLocationCosts();
   const numberedRows = (data ?? []).map((row: any, idx: number) => ({
     ...row,
     sno: idx + 1,
+    id: row.id,
+    cityName: row.city.cityName,
+    city: row.city.id,
+    cityId: row.city.cityId,
+    locations: row.city.locations,
+    locationCostDetails: row.locationCostDetails,
   }));
+
+//   const deleteLocationCostMutation = useDeleteLocationCost();
+
+  const handleDelete = async () => {
+    if (!selectedItem) return;
+
+    setIsLoadingDelete(true);
+    // try {
+    //   await deleteLocationCostMutation.mutateAsync(selectedItem);
+    //   handleCloseDelete();
+    // } catch (error: any) {
+    //   showError(error?.message || "Failed to delete location cost");
+    // } finally {
+    //   setIsLoadingDelete(false);
+    // }
+  };
+
   const columns = [
     {
       id: "sno",
       label: "S.No",
     },
-    { id: "cityId", label: "City ID" },
+    { id: "cityId", label: "City ID", },
     { id: "cityName", label: "City" },
     {
       id: "locations",
       label: "Locations",
-      render: (row: Row) => {
+      render: (row: any) => {
         if (!row.locations) {
           return "-";
         }
         const locationsArray = row.locations;
-        console.log(row.locations);
-        
         const displayLocations = locationsArray.slice(0, 2);
         const remainingLocations = locationsArray.slice(2);
 
         return (
           <Box sx={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            {displayLocations.map((loc: any, index: number) => (
-              <Chip
-                key={index}
-                label={loc.locationName}
-                sx={{
-                  backgroundColor: "var(--backgroundInner)",
-                  color: "var(--primary)",
-                  border: "solid 1px var(--border)",
-                  fontWeight: 500,
-                  borderRadius: "4px",
-                  fontFamily: "Medium_M",
-                }}
-                size="small"
-              />
-            ))}
+            {displayLocations.map(
+              (loc: { locationName: string }, index: number) => (
+                <Chip
+                  key={index}
+                  label={loc.locationName}
+                  sx={{
+                    backgroundColor: "var(--backgroundInner)",
+                    color: "var(--primary)",
+                    border: "solid 1px var(--border)",
+                    fontWeight: 500,
+                    borderRadius: "4px",
+                    fontFamily: "Medium_M",
+                  }}
+                  size="small"
+                />
+              )
+            )}
 
             {remainingLocations.length > 0 && (
               <Tooltip
                 title={
                   <Box sx={{ display: "flex", flexDirection: "column", p: 1 }}>
-                    {remainingLocations.map((loc: any, index: number) => (
-                      <Typography key={index} variant="body2">
-                        • {loc.locationName}
-                      </Typography>
-                    ))}
+                    {remainingLocations.map(
+                      (loc: { locationName: string }, index: number) => (
+                        <Typography key={index} variant="body2">
+                          • {loc.locationName}
+                        </Typography>
+                      )
+                    )}
                   </Box>
                 }
                 arrow
@@ -127,50 +162,42 @@ export const City = () => {
     },
   ];
 
-  const handleView = (data: any) => {
+  const handleView = (data: Row) => {
     setUserData(data);
     setIsView(true);
-    setIsEdit(false);
     setOpen(true);
   };
 
-  const handleEdit = (data: any) => {
+  const handleEdit = (data: Row) => {
     setUserData(data);
     setIsEdit(true);
-    setIsView(false);
+    setIsLocationCost(true);
     setOpen(true);
   };
 
-  const openDelete = (item: any) => {
+  const openDelete = (item: Row) => {
     setSelectedItem(item.id);
     setDeleteOpen(true);
   };
 
-  const handleDelete = () => {
-    setIsLoadingDelete(true);
-    setTimeout(() => {
-      handleClosetDelete();
-      showSuccess("Deleted Successfully (Dummy)");
-      setIsLoadingDelete(false);
-    }, 1000);
-  };
-
-  const handleClosetDelete = () => {
+  const handleCloseDelete = () => {
     setSelectedItem("");
     setDeleteOpen(false);
+    setIsLocationCost(false);
   };
 
   const handleClose = () => {
     setOpen(false);
     setIsEdit(false);
     setIsView(false);
-    setUserData({});
+    setUserData({
+      id: "",
+      locationCostId: "",
+      locationName: "",
+      city: "",
+      cost: 0,
+    });
   };
-
-  // const onsubmit = () => {
-  //   showSuccess(`Submitted: ${JSON.stringify(data)}`);
-  //   handleClose();
-  // };
 
   return (
     <>
@@ -184,7 +211,7 @@ export const City = () => {
         }}
       >
         <CustomButton
-          label="Add City"
+          label="Add Location Cost"
           type="submit"
           variant="contained"
           startIcon={<AddIcon />}
@@ -204,16 +231,26 @@ export const City = () => {
         colvis={true}
         search={true}
         exportBoolean={true}
-        title="City List"
+        title="Location Cost List"
       />
 
-      <CityModel
+      <LocationCostModel
         open={open}
         onClose={handleClose}
-        // onSubmit={onsubmit}
         userData={userData}
         isEdit={isEdit}
         isView={isView}
+        isLocationCost={isLocationCost}
+      />
+
+      <DeleteConfirmationModal
+        open={deleteOpen}
+        onClose={handleCloseDelete}
+        onDelete={handleDelete}
+        title="Delete Location Cost"
+        description="Are you sure you want to delete this Location Cost? This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
       />
     </>
   );

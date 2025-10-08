@@ -1,65 +1,69 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiUrls } from "../api/apiUrl";
-import type { ApiResponse } from "../Interface/Custom";
 import { useApi } from "../api/apiService";
+import type { ApiResponse } from "../Interface/Custom";
 import { showSuccess } from "../Custom/CustomToast";
 
-export const useGetCities = () => {
+// ✅ Get all transports
+export const useGetTransports = () => {
   const { callApi } = useApi();
   return useQuery({
-    queryKey: ["cityList"],
+    queryKey: ["transportList"],
     queryFn: async () => {
-      const response = await callApi(`${apiUrls.city}`, "GET");
+      const response = await callApi(`${apiUrls.transport}`, "GET");
       return (response as ApiResponse).data;
     },
     refetchOnWindowFocus: true,
   });
 };
 
-export const useCityCreate = () => {
+// ✅ Create new transport
+export const useTransportCreate = () => {
   const queryClient = useQueryClient();
   const { callApi } = useApi();
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await callApi(`${apiUrls.city}`, "POST", data);
+      const response = await callApi(`${apiUrls.transport}`, "POST", data);
       return response as ApiResponse;
     },
     onSuccess: () => {
-          showSuccess("City Created Successfully");
-          queryClient.invalidateQueries({ queryKey: ["cityList"] });
-        },
+      showSuccess("Transport Created Successfully");
+      queryClient.invalidateQueries({ queryKey: ["transportList"] });
+    },
   });
 };
 
-export const useUpdateCity = () => {
+// ✅ Update transport
+export const useUpdateTransport = () => {
   const queryClient = useQueryClient();
   const { callApi } = useApi();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const response = await callApi(`${apiUrls.city}/${id}`, "PUT", data);
+      const response = await callApi(`${apiUrls.transport}/${id}`, "PUT", data);
       return response as ApiResponse;
     },
     onSuccess: () => {
-      showSuccess("City updated Successfully");
-      queryClient.invalidateQueries({ queryKey: ["cityList"] });
+      showSuccess("Transport Updated Successfully");
+      queryClient.invalidateQueries({ queryKey: ["transportList"] });
     },
   });
 };
 
-export const useDeleteCity = () => {
+// ✅ Delete transport
+export const useDeleteTransport = () => {
   const queryClient = useQueryClient();
   const { callApi } = useApi();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await callApi(`${apiUrls.city}/${id}`, "DELETE");
+      const response = await callApi(`${apiUrls.transport}/${id}`, "DELETE");
       return response as ApiResponse;
     },
     onSuccess: () => {
-      showSuccess("City deleted Successfully");
-      queryClient.invalidateQueries({ queryKey: ["cityList"] });
+      showSuccess("Transport Deleted Successfully");
+      queryClient.invalidateQueries({ queryKey: ["transportList"] });
     },
   });
 };

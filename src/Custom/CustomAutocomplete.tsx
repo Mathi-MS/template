@@ -23,17 +23,22 @@ export const CustomAutocomplete = ({
   errors,
   control,
   helperText,
+  disabled,
 }: any) => {
   const errorMessage = get(errors, `${name}.message`, null);
 
   return (
     <>
-    <Tooltip title={label} arrow>
-          <Typography sx={{...labelStyle}} component={"span"}>
-            {label.length > 20 ? label.slice(0, 20) + "..." : label}
-          </Typography>
-        </Tooltip>
-        {required && <Box component={"span"} color={"var(--error)"}>*</Box>}
+      <Tooltip title={label} arrow>
+        <Typography sx={{ ...labelStyle }} component={"span"}>
+          {label.length > 20 ? label.slice(0, 20) + "..." : label}
+        </Typography>
+      </Tooltip>
+      {required && (
+        <Box component={"span"} color={"var(--error)"}>
+          *
+        </Box>
+      )}
       <Controller
         name={name}
         control={control}
@@ -42,9 +47,18 @@ export const CustomAutocomplete = ({
             multiple={multiple}
             limitTags={limitTags}
             options={options || []}
+            disabled={disabled}
             getOptionLabel={(option) => option.label}
             renderOption={(props, option) => (
-              <Box component="li" {...props} sx={{ fontFamily: "Regular_M",fontSize:"14px",padding:"8px 12px !important", }}>
+              <Box
+                component="li"
+                {...props}
+                sx={{
+                  fontFamily: "Regular_M",
+                  fontSize: "14px",
+                  padding: "8px 12px !important",
+                }}
+              >
                 {option.label}
               </Box>
             )}
@@ -77,7 +91,8 @@ export const CustomAutocomplete = ({
                 }}
               />
             )}
-            sx={{ width: "100%",}}
+            disablePortal 
+            sx={{ width: "100%" }}
           />
         )}
       />

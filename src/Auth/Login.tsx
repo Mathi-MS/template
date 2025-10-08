@@ -7,7 +7,7 @@ import {
 } from "../assets/Styles/LoginStyle";
 import { images } from "../assets/Images/Images";
 import { CustomInput } from "../Custom/CustomInput";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import CustomButton from "../Custom/CustomButton";
@@ -16,6 +16,9 @@ import { LoginSchema } from "../assets/Validation/Schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
+import { useUser } from "../Config/userContext";
+import { useLoginApi } from "../Hooks/login";
+import type { ApiResponse } from "../Interface/Custom";
 export const Login = () => {
   const [visibility, setVisibility] = useState(false);
   const {
@@ -28,18 +31,68 @@ export const Login = () => {
     resolver: zodResolver(LoginSchema),
     defaultValues: { rememberMe: false },
   });
+  const { login } = useUser();
   const navigate = useNavigate();
+  const loginMutation = useLoginApi();
+
+  useEffect(() => {
+    const savedUserId = Cookies.get("userId");
+    const savedPassword = Cookies.get("password");
+
+    if (savedUserId && savedPassword) {
+      reset({
+        email: savedUserId,
+        password: savedPassword,
+        rememberMe: true,
+      });
+    }
+  }, [reset]);
+
   const onsubmit = async (data: {
     email: string;
     password: string;
     rememberMe?: boolean;
   }) => {
-    console.log(data);
-    navigate("/dashboard");
-    reset();
-    Cookies.set("tokenBoiler", "token");
-    Cookies.set("role", "SuperAdmin");
-    Cookies.set("name", "Gopal");
+    try {
+      const dataToSend = {
+        userId: data.email,
+        password: data.password,
+      };
+      const response = await loginMutation.mutateAsync(dataToSend);
+      const storedData = {
+        user: {
+          userId:
+            response?.account?.userId ||
+            response?.account?.vendorId ||
+            response?.account?.transportId,
+          username:
+            response?.account?.username ||
+            response?.account?.vendorName ||
+            response?.account?.ownerDetails,
+          mobileNo:
+            response?.account?.mobileNo ||
+            response?.account?.mobile ||
+            response?.account?.contact,
+          email: response?.account?.email,
+          role: response?.account?.role,
+          account: response?.account,
+        },
+        token: response.token,
+      };
+      login(storedData);
+      if (data.rememberMe) {
+        Cookies.set("userId", data.email);
+        Cookies.set("password", data.password);
+      }
+      if (response?.account?.role === "admin") {
+        navigate("/dashboard");
+      } else if (response?.account?.role === "user") {
+        navigate("/ride");
+      }
+      reset();
+    } catch (error) {
+      console.error("Login failed", error);
+    }
   };
   return (
     <>
@@ -47,7 +100,7 @@ export const Login = () => {
         <Box sx={{ ...LoginPageLeft }}>
           <Typography variant="h2">Sign In</Typography>
           <Typography component={"p"}>
-            Enter your email and password to sign in!
+            Enter your User-ID and password to sign in!
           </Typography>
           <Box
             component={"form"}
@@ -55,9 +108,9 @@ export const Login = () => {
             onSubmit={handleSubmit(onsubmit)}
           >
             <CustomInput
-              label="Email"
+              label="User ID"
               required
-              placeholder="Enter your email"
+              placeholder="Enter your User ID"
               type="text"
               name="email"
               register={register}

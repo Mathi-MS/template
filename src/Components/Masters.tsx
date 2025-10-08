@@ -2,6 +2,11 @@ import { useState, } from "react";
 import { Box, Tabs, Tab, Typography } from "@mui/material";
 import { City } from "../Pages/City";
 import { Location } from "../Pages/Location";
+import { LocationCost } from "../Pages/LocationCost";
+import { Vendor } from "../Pages/Vendor";
+import TransportTable from "../Pages/Transport";
+import { useUser } from "../Config/userContext";
+import UserTable from "../Pages/user";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -25,12 +30,34 @@ function TabPanel(props: TabPanelProps) {
 
 export const Masters = () => {
   const [value, setValue] = useState(0);
+  const { user } = useUser();
 
+  const role = user?.user?.role?.toLowerCase(); 
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
+
+   const tabs = [
+     { label: "City", component: <City />, roles: ["superadmin"] },
+     {
+       label: "Location",
+       component: <Location />,
+       roles: ["superadmin"],
+     },
+     { label: "Location Cost", component: <LocationCost />, roles: ["superadmin"] },
+     { label: "Vendor", component: <Vendor />, roles: ["superadmin"] },
+     { label: "User", component: <UserTable/>, roles: ["superadmin"] },
+     {
+       label: "Transport",
+       component: <TransportTable />,
+       roles: ["vendor"],
+     },
+   ];
+
+   // Filter tabs based on current role
+   const visibleTabs = tabs.filter((tab) => tab.roles.includes(role ?? ""));
   return (
     <Box
       sx={{
@@ -55,45 +82,33 @@ export const Masters = () => {
             fontFamily: "Medium_M",
             textTransform: "capitalize",
             fontSize: "14px",
-            padding:"10px 20px",
-            minHeight:"unset"
+            padding: "10px 20px",
+            minHeight: "unset",
           },
-          "& .MuiTabs-indicator":{
-            display:"none",
+          "& .MuiTabs-indicator": {
+            display: "none",
           },
           "& button.Mui-selected": {
             backgroundColor: "var(--white)",
             borderRadius: "6px",
-            color:"var(--primary)",
+            color: "var(--primary)",
           },
           backgroundColor: "var(--backgroundInner)",
           borderRadius: "6px",
-          padding:"5px"
+          padding: "5px",
         }}
       >
-        <Tab label="City" />
-        <Tab label="Location" />
-        <Tab label="Location Cost" />
-        <Tab label="Vendor" />
-        <Tab label="User" />
+        {visibleTabs.map((tab, index) => (
+          <Tab key={tab.label} label={tab.label} />
+        ))}
       </Tabs>
 
       {/* Tab Panels */}
-      <TabPanel value={value} index={0}>
-        <City />
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        <Location />
-      </TabPanel>
-      <TabPanel value={value} index={2}>
-        Location Cost Content here
-      </TabPanel>
-      <TabPanel value={value} index={3}>
-        Vendor Content here
-      </TabPanel>
-      <TabPanel value={value} index={4}>
-        User Content here
-      </TabPanel>
+      {visibleTabs.map((tab, index) => (
+        <TabPanel key={tab.label} value={value} index={index}>
+          {tab.component}
+        </TabPanel>
+      ))}
     </Box>
   );
 };

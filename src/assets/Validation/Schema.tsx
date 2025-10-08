@@ -1,10 +1,6 @@
 import { z } from "zod";
 export const LoginSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: "Email is required" })
-    .email({ message: "Invalid email address" })
-    .trim(),
+  email: z.string().min(1, { message: "UserId is required" }).trim(),
   password: z
     .string()
     .min(1, { message: "Password is required" })
@@ -42,6 +38,7 @@ export const ResetPasswordSchema = z
   });
 
 export const citySchema = z.object({
+  id: z.string().optional(),
   cityId: z
     .string()
     .min(1, { message: "City ID is required" })
@@ -79,12 +76,63 @@ export const locationSchema = z.object({
       message: "Location Name can only contain letters and spaces",
     })
     .trim(),
-  cityName: z
+  city: z.string().min(1, { message: "City Name is required" }).trim(),
+});
+
+export const vendorSchema = z.object({
+  vendorId: z.string().min(1, "Vendor ID is required"),
+  vendorName: z.string().min(1, "Vendor Name is required"),
+  city: z.string().min(1, { message: "City Name is required" }).trim(),
+  address: z.string().min(1, "Address is required"),
+  email: z.string().email("Invalid email address"),
+  mobile: z
     .string()
-    .min(1, { message: "City Name is required" })
-    .min(3, { message: "City Name must be at least 3 characters" })
-    .regex(/^[A-Za-z\s]+$/, {
-      message: "City Name can only contain letters and spaces",
-    })
-    .trim(),
+    .min(10, "Mobile must be at least 10 digits")
+    .max(15, "Mobile number too long"),
+});
+
+export const transportSchema = z.object({
+  transportId: z.string().min(1, "Transport ID is required"),
+  vehicleNo: z.string().min(1, "Vehicle Number is required"),
+  ownerDetails: z.string().min(1, "Owner Details is required"),
+  contact: z.string().min(1, "Contact is required"),
+  type: z.string().min(1, "Type is required"),
+  seater: z.coerce
+    .number()
+    .min(1, "Seater is required")
+    .max(20, "Seater must be less than 20"),
+  vendor: z.string().min(1, "Vendor is required"),
+  vendorName: z.string().optional(),
+  city: z.string().min(1, { message: "City Name is required" }),
+  cityName: z.string().optional(),
+});
+
+export const userSchema = z.object({
+  userId: z.string().min(1, { message: "User ID is required" }),
+
+  username: z.string().min(1, { message: "Username is required" }),
+
+  address: z.string().min(1, { message: "Address is required" }),
+
+  mobileNo: z
+    .string()
+    .min(10, { message: "Mobile number must be at least 10 digits" })
+    .max(15, { message: "Mobile number is too long" })
+    .regex(/^[0-9]+$/, { message: "Mobile number must contain only digits" }),
+
+  pickupLocation: z.string().min(1, { message: "Pickup Location is required" }),
+  cityId: z.string().min(1, { message: "City is required" }),
+
+  transport: z.string().min(1, { message: "Transport is required" }),
+
+  noOfPerson: z.coerce
+    .number("Number of Persons must be a number")
+    .min(1, { message: "At least 1 person is required" }),
+
+  email: z
+    .string()
+    .min(1, { message: "Email is required" })
+    .email({ message: "Invalid email address" }),
+
+  role: z.string().min(1, { message: "Role is required" }),
 });

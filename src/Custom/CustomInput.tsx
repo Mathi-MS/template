@@ -28,11 +28,15 @@ export const CustomInput = ({
         }}
       >
         <Tooltip title={label} arrow>
-          <Typography sx={{...labelStyle}} component={"span"}>
+          <Typography sx={{ ...labelStyle }} component={"span"}>
             {label.length > 20 ? label.slice(0, 20) + "..." : label}
           </Typography>
         </Tooltip>
-        {required && <Box component={"span"} color={"var(--error)"}>*</Box>}
+        {required && (
+          <Box component={"span"} color={"var(--error)"}>
+            *
+          </Box>
+        )}
 
         <TextField
           placeholder={placeholder}
@@ -54,6 +58,11 @@ export const CustomInput = ({
               endAdornment: endAdornment ? (
                 <InputAdornment position="start">{endAdornment}</InputAdornment>
               ) : undefined,
+              onWheel: (e: React.WheelEvent<HTMLInputElement>) => {
+                if (type === "number") {
+                  e.currentTarget.blur(); 
+                }
+              },
             },
           }}
         />
