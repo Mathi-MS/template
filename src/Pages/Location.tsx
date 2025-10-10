@@ -14,7 +14,6 @@ import { useGetLocationCostById } from "../Hooks/locationcost";
 import { useGetCities } from "../Hooks/city";
 import LocationCostModel from "../Model/LOcationCostModel";
 
-
 export interface Locations {
   id?: string;
   locationId: string;
@@ -80,50 +79,60 @@ export const Location = () => {
     setSelectedCityId(cityId);
   };
 
-  useEffect(() => {
-    if (!selectedCityId) return;
+useEffect(() => {
+  if (!selectedCityId) return;
 
-    const costDetails = locationCosts?.locationCostDetails ?? [];
-    if (costDetails.length > 0) {
-      setIsViewCost(true);
-      setOpenCostModal(true);
-      const mergedCombinations = [];
-      const city = (cities ?? []).find((c: any) => c.id === selectedCityId);
-      console.log(city?.locations);
-      
-      if (!city) return;
-      const existingCosts = locationCosts?.locationCostDetails ?? [];
-      for (let i = 0; i < city?.locations.length; i++) {
-        for (let j = 0; j < city?.locations.length; j++) {
-          if (i !== j) {
-            const existing = existingCosts.find(
-              (lc: any) =>
-                lc.pickupLocation.id === city?.locations[i].id &&
-                lc.dropLocation.id === city?.locations[j].id
-            );
+  const city = (cities ?? []).find((c: any) => c.id === selectedCityId);
+  if (!city) return;
 
-            mergedCombinations.push({
-              pickup: city?.locations[i].id,
-              pickupLocation: city?.locations[i].locationName,
-              drop: city?.locations[j].id,
-              dropLocation: city?.locations[j].locationName,
-              cost: existing ? existing.cost : "",
-            });
-          }
-        }
+  const existingCosts = locationCosts?.locationCostDetails ?? [];
+  const cityLocations = city.locations ?? [];
+
+  // At least 2 locations are required to generate combinations
+  if (cityLocations.length < 2) {
+    // showError("At least 2 locations required to create cost combinations.");
+    return;
+  }
+
+  // 🧩 Build all pickup/drop combinations
+  const mergedCombinations: any[] = [];
+  for (let i = 0; i < cityLocations.length; i++) {
+    for (let j = 0; j < cityLocations.length; j++) {
+      if (i !== j) {
+        const existing = existingCosts.find(
+          (lc: any) =>
+            lc.pickupLocation?.id === cityLocations[i].id &&
+            lc.dropLocation?.id === cityLocations[j].id
+        );
+
+        mergedCombinations.push({
+          pickup: cityLocations[i].id,
+          pickupLocation: cityLocations[i].locationName,
+          drop: cityLocations[j].id,
+          dropLocation: cityLocations[j].locationName,
+          cost: existing ? existing.cost : "",
+          isCostReadonly: !!existing?.cost,
+        });
       }
-      setIsEditableData({
-        cityName: locationCosts.city.cityName,
-        city: locationCosts.city.id,
-        cityId: locationCosts.city.cityId,
-        locations: locationCosts.city.locations,
-        locationCostDetails: mergedCombinations,
-      });
-    } else if (costDetails.length === 0) {
-      setIsViewCost(false);
-      setOpenCostModal(true);
     }
-  }, [locationCosts, selectedCityId]);
+  }
+
+  // 🧠 Determine mode based on presence of cost details
+  const hasExistingCosts = existingCosts.length > 0;
+
+  setIsViewCost(hasExistingCosts);
+  setIsEditableData({
+    cityName: city.cityName,
+    city: city.id,
+    cityId: city.cityId,
+    locations: city.locations,
+    locationCostDetails: mergedCombinations,
+  });
+
+  // ✅ Always open the modal (both cases)
+  setOpenCostModal(true);
+}, [locationCosts, selectedCityId, cities]);
+
 
   const columns = [
     { id: "sno", label: "S.No" },

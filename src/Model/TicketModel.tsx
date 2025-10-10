@@ -60,7 +60,7 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
   const verifyOtpMutation = useVerifyOtp();
 
   useEffect(() => {
-    if (open && userData?.otp) {
+    if (open && userData) {
       reset({
         cityName: userData?.city?.cityName || "",
         pickupLocation: userData?.pickupLocation?.locationName || "",
@@ -187,41 +187,30 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
           </Box> */}
 
           {/* OTP input with button */}
-          {userData?.otp ? (
-            <CustomInput
-              label="OTP"
-              required
-              placeholder="Enter OTP"
-              type="text"
-              name="otp"
-              register={register}
-              errors={errors}
-              disabled
-              boxSx={{ mb: 2 }}
-            />
-          ):
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <CustomInput
-              label="OTP"
-              required
-              placeholder="Enter OTP"
-              type="text"
-              name="otp"
-              register={register}
-              errors={errors}
-              disabled={!otpSent}
-              boxSx={{ mb: 2 }}
-            />
-            {
-              <CustomButton
-                type="button"
-                variant="contained"
-                label={otpSent ? "Resend OTP" : "Get OTP"}
-                onClick={handleSendOtp}
-                loading={otpLoading}
+          {userData?.status?.toLowerCase() !== "ride started" && (
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+              <CustomInput
+                label="OTP"
+                required
+                placeholder="Enter OTP"
+                type="text"
+                name="otp"
+                register={register}
+                errors={errors}
+                disabled={!otpSent}
+                boxSx={{ mb: 2 }}
               />
-            }
-          </Box>}
+              {
+                <CustomButton
+                  type="button"
+                  variant="contained"
+                  label={otpSent ? "Resend OTP" : "Get OTP"}
+                  onClick={handleSendOtp}
+                  loading={otpLoading}
+                />
+              }
+            </Box>
+          )}
 
           {/* Buttons */}
         </Box>
@@ -234,11 +223,10 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
               backgroundColor: "transparent",
               color: "var(--text-secondary)",
               border: "1px solid var(--border) !important",
-              
             }}
             onClick={handleClose}
           />
-          {!userData?.otp && (
+          {userData?.status?.toLowerCase() !== "ride started" && (
             <CustomButton
               type="submit"
               variant="contained"

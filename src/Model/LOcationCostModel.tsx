@@ -1,4 +1,4 @@
-import { Box, IconButton, Modal, Typography } from "@mui/material";
+import { Box, IconButton, InputAdornment, Modal, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import CustomButton from "../Custom/CustomButton";
@@ -96,7 +96,7 @@ const LocationCostModel = ({
 
   const { mutate: createLocationCost } = useCreateLocationCost();
   useEffect(() => {
-    if (userData && (isEdit || isView)) {
+    if (userData) {
       reset({
         city: userData.city || "",
         locationCosts:
@@ -112,7 +112,7 @@ const LocationCostModel = ({
           })) || [],
       });
     }
-  }, [userData, isEdit, isView, reset]);
+  }, [userData, reset]);
 
   useEffect(() => {
     if ((isEdit || isView) && userData) return;
@@ -151,7 +151,7 @@ const LocationCostModel = ({
     setIsLoading(true);
     const formData = getValues();
     console.log(getValues());
-    
+
     const payloadforLocationUpdate = {
       city: formData.city,
       locationCostDetails: formData.locationCosts
@@ -164,12 +164,11 @@ const LocationCostModel = ({
     };
     const payloadforLocationCost = {
       city: formData.city,
-      locationCostDetails: formData.locationCosts
-        .map((lc) => ({
-          pickupLocation: lc.pickup,
-          dropLocation: lc.drop,
-          cost: Number(lc.cost),
-        })),
+      locationCostDetails: formData.locationCosts.map((lc) => ({
+        pickupLocation: lc.pickup,
+        dropLocation: lc.drop,
+        cost: Number(lc.cost),
+      })),
     };
 
     const dataToSend = isLocationCost
@@ -294,7 +293,12 @@ const LocationCostModel = ({
                     type="number"
                     errors={errors}
                     register={register}
-                    disabled={isView || (field.isCostReadonly && !isLocationCost)}
+                    disabled={
+                      isView || (field.isCostReadonly && !isLocationCost)
+                    }
+                    startAdornment={
+                      <InputAdornment position="start">$</InputAdornment>
+                    }
                   />
                 </Box>
               ))}

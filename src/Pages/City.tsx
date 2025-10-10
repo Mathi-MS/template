@@ -47,8 +47,6 @@ export const City = () => {
           return "-";
         }
         const locationsArray = row.locations;
-        console.log(row.locations);
-        
         const displayLocations = locationsArray.slice(0, 2);
         const remainingLocations = locationsArray.slice(2);
 

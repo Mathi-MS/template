@@ -90,7 +90,11 @@ export const Tickets = () => {
       label: "Pickup Location",
       render: (row: any) => row.pickupLocation?.locationName,
     },
-    { id: "date", label: "Date" },
+    {
+      id: "pickupDate",
+      label: "Date",
+      render: (row: any) => new Date(row.pickupDate).toLocaleDateString(),
+    },
     { id: "status", label: "Status" },
     {
       id: "action",

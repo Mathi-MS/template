@@ -1,6 +1,14 @@
-import { Box, IconButton, Modal, Typography } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Modal,
+  TextField,
+  Typography,
+  InputAdornment,
+  Tooltip,
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { CustomInput } from "../Custom/CustomInput";
@@ -19,6 +27,9 @@ import {
   useGetTransportsByLocation,
 } from "../Hooks/user";
 import { useGetCities } from "../Hooks/city";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 export interface UserFormData {
   id?: string;
@@ -26,12 +37,12 @@ export interface UserFormData {
   username: string;
   address: string;
   mobileNo: string;
-  cityId: string; 
+  cityId: string;
   pickupLocation: string;
   transport: string;
   noOfPerson: number;
   email: string;
-  role: string;
+  pickupDate: any;
 }
 
 const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
@@ -64,7 +75,7 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
       transport: "",
       noOfPerson: 0,
       email: "",
-      role: "",
+      pickupDate: null,
     },
   });
 
@@ -79,7 +90,6 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
       title: l.id,
     })) ?? [];
 
-  // ✅ Fetch transports based on location
   const { data: transports } = useGetTransportsByLocation(
     typeof selectedCity === "string" ? selectedCity : undefined
   );
@@ -107,10 +117,10 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
         transport: "",
         noOfPerson: 0,
         email: "",
-        role: "",
+        pickupDate: null,
       });
     }
-  }, [open, userData?.id]);
+  }, [open, userData?.id, reset]);
 
   const handleClose = () => {
     reset();
@@ -119,12 +129,20 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
 
   const onSubmit = async () => {
     const data = getValues();
+    const formattedData = {
+      ...data,
+      role: "user", 
+      pickupDate: data.pickupDate
+        ? dayjs(data.pickupDate).format("YYYY-MM-DD")
+        : null,
+    };
+
     try {
       setLoading(true);
       if (isEdit && userData?.id) {
-        await updateUser.mutateAsync({ id: userData.id, data });
+        await updateUser.mutateAsync({ id: userData.id, data: formattedData });
       } else {
-        await createUser.mutateAsync(data);
+        await createUser.mutateAsync(formattedData);
       }
       handleClose();
     } catch (err) {
@@ -164,126 +182,165 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
           </IconButton>
         </Box>
 
-        <Box
-          component="form"
-          onSubmit={handleSubmit(onSubmit)}
-          sx={{ m: "5px 0px 20px 0px" }}
-        >
-          <CustomInput
-            label="User ID"
-            required
-            name="userId"
-            placeholder="Enter User ID"
-            register={register}
-            errors={errors}
-            disabled={isView || isEdit}
-            boxSx={{ mb: 2 }}
-          />
-          <CustomInput
-            label="Username"
-            required
-            name="username"
-            placeholder="Enter Username"
-            register={register}
-            errors={errors}
-            disabled={isView}
-            boxSx={{ mb: 2 }}
-          />
-          <CustomInput
-            label="Address"
-            required
-            name="address"
-            placeholder="Enter Address"
-            register={register}
-            errors={errors}
-            disabled={isView}
-            boxSx={{ mb: 2 }}
-          />
-          <CustomInput
-            label="Mobile Number"
-            required
-            name="mobileNo"
-            placeholder="Enter Mobile Number"
-            register={register}
-            errors={errors}
-            disabled={isView}
-            boxSx={{ mb: 2 }}
-          />
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit(onSubmit)}
+            sx={{ m: "5px 0px 20px 0px" }}
+          >
+            {/* Inputs */}
+            <CustomInput
+              label="User ID"
+              required
+              name="userId"
+              placeholder="Enter User ID"
+              register={register}
+              errors={errors}
+              disabled={isView || isEdit}
+              boxSx={{ mb: 2 }}
+            />
+            <CustomInput
+              label="Username"
+              required
+              name="username"
+              placeholder="Enter Username"
+              register={register}
+              errors={errors}
+              disabled={isView}
+              boxSx={{ mb: 2 }}
+            />
+            <CustomInput
+              label="Address"
+              required
+              name="address"
+              placeholder="Enter Address"
+              register={register}
+              errors={errors}
+              disabled={isView}
+              boxSx={{ mb: 2 }}
+            />
+            <CustomInput
+              label="Mobile Number"
+              required
+              name="mobileNo"
+              placeholder="Enter Mobile Number"
+              register={register}
+              errors={errors}
+              disabled={isView}
+              boxSx={{ mb: 2 }}
+            />
 
-          {/* ✅ New City Field */}
-          <CustomAutocomplete
-            label="City"
-            required
-            placeholder="Select City"
-            name="cityId"
-            control={control}
-            errors={errors}
-            options={cityOptions}
-            multiple={false}
-            disabled={isView}
-            boxSx={{ mb: 2 }}
-          />
+            <Box sx={{ mb: 2 }}>
+              <Tooltip title="Pickup Date" arrow>
+                <Typography
+                  sx={{
+                    fontSize: "14px",
+                    fontFamily: "Medium_M",
+                    color: "var(--text-primary)",
+                    mb: "6px",
+                    display: "inline-block",
+                  }}
+                  component={"span"}
+                >
+                  {"Pickup Date".length > 20
+                    ? "Pickup Date".slice(0, 20) + "..."
+                    : "Pickup Date"}
+                </Typography>
+              </Tooltip>
+              <Box component={"span"} color={"var(--error)"}>
+                *
+              </Box>
+              <Controller
+                name="pickupDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value}
+                    onChange={(date) => field.onChange(date)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        required: true,
+                        variant: "outlined",
+                        disabled: isView,
+                        error: !!errors.pickupDate,
+                        helperText: errors.pickupDate?.message, 
+                      },
+                    }}
+                  />
+                )}
+              />
+            </Box>
 
-          {/* ✅ Location depends on City */}
-          <CustomAutocomplete
-            label="Pickup Location"
-            required
-            placeholder="Select Pickup Location"
-            name="pickupLocation"
-            control={control}
-            errors={errors}
-            options={locationOptions}
-            multiple={false}
-            disabled={isView || !selectedCity}
-            boxSx={{ mb: 2 }}
-          />
+            {/* ✅ City */}
+            <CustomAutocomplete
+              label="City"
+              required
+              placeholder="Select City"
+              name="cityId"
+              control={control}
+              errors={errors}
+              options={cityOptions}
+              multiple={false}
+              disabled={isView}
+              boxSx={{ mb: 2 }}
+            />
 
-          <CustomAutocomplete
-            label="Transport"
-            required
-            placeholder="Select Transport"
-            name="transport"
-            control={control}
-            errors={errors}
-            options={transportOptions}
-            multiple={false}
-            disabled={isView || !selectedCity}
-            boxSx={{ mb: 2 }}
-          />
+            {/* ✅ Pickup Location */}
+            <CustomAutocomplete
+              label="Pickup Location"
+              required
+              placeholder="Select Pickup Location"
+              name="pickupLocation"
+              control={control}
+              errors={errors}
+              options={locationOptions}
+              multiple={false}
+              disabled={isView || !selectedCity}
+              boxSx={{ mb: 2 }}
+            />
 
-          <CustomInput
-            label="No. of Persons"
-            required
-            name="noOfPerson"
-            type="number"
-            placeholder="Enter Number of Persons"
-            register={register}
-            errors={errors}
-            disabled={isView}
-            boxSx={{ mb: 2 }}
-          />
-          <CustomInput
-            label="Email"
-            required
-            name="email"
-            type="email"
-            placeholder="Enter Email"
-            register={register}
-            errors={errors}
-            disabled={isView}
-            boxSx={{ mb: 2 }}
-          />
-          <CustomInput
-            label="Role"
-            required
-            name="role"
-            placeholder="Enter Role"
-            register={register}
-            errors={errors}
-            disabled={isView}
-            boxSx={{ mb: 2 }}
-          />
-        </Box>
+            {/* ✅ Transport */}
+            <CustomAutocomplete
+              label="Transport"
+              required
+              placeholder="Select Transport"
+              name="transport"
+              control={control}
+              errors={errors}
+              options={transportOptions}
+              multiple={false}
+              disabled={isView || !selectedCity}
+              boxSx={{ mb: 2 }}
+            />
+
+            {/* ✅ No. of Persons */}
+            <CustomInput
+              label="No. of Persons"
+              required
+              name="noOfPerson"
+              type="number"
+              placeholder="Enter Number of Persons"
+              register={register}
+              errors={errors}
+              disabled={isView}
+              boxSx={{ mb: 2 }}
+            />
+
+            {/* ✅ Email */}
+            <CustomInput
+              label="Email"
+              required
+              name="email"
+              type="email"
+              placeholder="Enter Email"
+              register={register}
+              errors={errors}
+              disabled={isView}
+              boxSx={{ mb: 2 }}
+            />
+          </Box>
+        </LocalizationProvider>
 
         {!isView && (
           <Box sx={{ ...btnStyleContainer, justifyContent: "end" }}>
@@ -304,7 +361,12 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
               size="medium"
               label={isEdit ? "Save Changes" : "Create"}
               loading={isLoading}
-              onClick={handleSubmit(onSubmit)}
+              onClick={()=>{
+                handleSubmit(onSubmit)();
+                console.log(getValues());
+                console.log(errors);
+                
+              }}
             />
           </Box>
         )}

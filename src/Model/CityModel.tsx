@@ -37,14 +37,22 @@ const CityModel = ({ open, onClose, userData, isEdit, isView }: any) => {
   const createCityMutation = useCityCreate();
   const updateCityMutation = useUpdateCity();
 
-  useEffect(() => {
-    if (open && userData?.id) {
+useEffect(() => {
+  if (open) {
+    if (userData?.id) {
       reset({
-        cityId: userData?.cityId || "",
-        cityName: userData?.cityName || "",
+        cityId: userData.cityId || "",
+        cityName: userData.cityName || "",
+      });
+    } else {
+      reset({
+        cityId: "",
+        cityName: "",
       });
     }
-  }, [open, userData?.id]);
+  }
+}, [open, userData]);
+
 
   const handleClose = () => {
     reset();

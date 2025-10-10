@@ -1,3 +1,4 @@
+import dayjs, { Dayjs } from "dayjs";
 import { z } from "zod";
 export const LoginSchema = z.object({
   email: z.string().min(1, { message: "UserId is required" }).trim(),
@@ -109,30 +110,29 @@ export const transportSchema = z.object({
 
 export const userSchema = z.object({
   userId: z.string().min(1, { message: "User ID is required" }),
-
   username: z.string().min(1, { message: "Username is required" }),
-
   address: z.string().min(1, { message: "Address is required" }),
-
   mobileNo: z
     .string()
     .min(10, { message: "Mobile number must be at least 10 digits" })
     .max(15, { message: "Mobile number is too long" })
     .regex(/^[0-9]+$/, { message: "Mobile number must contain only digits" }),
-
   pickupLocation: z.string().min(1, { message: "Pickup Location is required" }),
   cityId: z.string().min(1, { message: "City is required" }),
-
   transport: z.string().min(1, { message: "Transport is required" }),
-
-  noOfPerson: z.coerce
-    .number("Number of Persons must be a number")
-    .min(1, { message: "At least 1 person is required" }),
-
+  pickupDate: z
+    .custom<Dayjs>((val) => dayjs.isDayjs(val), {
+      message: "Pickup date is required",
+    })
+    .refine((date) => date && date.isValid(), {
+      message: "Invalid date format",
+    })
+    .refine((date) => date && !date.isBefore(dayjs().startOf("day")), {
+      message: "Pickup Date cannot be in the past",
+    }),
+  noOfPerson: z.string().min(1, { message: "At least 1 person is required" }),
   email: z
     .string()
     .min(1, { message: "Email is required" })
     .email({ message: "Invalid email address" }),
-
-  role: z.string().min(1, { message: "Role is required" }),
 });
