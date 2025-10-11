@@ -9,4 +9,6 @@ export const apiUrls = {
   transport:"transport",
   user:"user",
   rideTicket:"ride-ticket",
+  reset:"auth/reset-link",
+  auth:"auth"
 };

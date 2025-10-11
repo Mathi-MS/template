@@ -6,6 +6,8 @@ import { RouterProvider } from "react-router-dom";
 import  { useEffect, useState } from "react";
 import LoaderSplash from "./Components/LoaderSplash";
 import { UserProvider } from "./Config/userContext";
+import "antd/dist/reset.css";
+
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const App = () => {

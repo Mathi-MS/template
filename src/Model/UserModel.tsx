@@ -80,6 +80,7 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
   });
 
   const selectedCity = watch("cityId");
+  const noOfPerson = watch("noOfPerson");
   const selectedCityData = (cities ?? []).find(
     (c: any) => c.id === selectedCity
   );
@@ -91,7 +92,8 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
     })) ?? [];
 
   const { data: transports } = useGetTransportsByLocation(
-    typeof selectedCity === "string" ? selectedCity : undefined
+    typeof selectedCity === "string" ? selectedCity : undefined,
+    noOfPerson && noOfPerson > 0 ? noOfPerson : undefined
   );
 
   const transportOptions =
@@ -105,7 +107,20 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
 
   useEffect(() => {
     if (open && userData?.id) {
-      reset(userData);
+      console.log(userData);
+      
+      reset({
+        userId: userData.userId || "",
+        username: userData.username || "",
+        address: userData.address || "",
+        mobileNo: userData.mobileNo || "",
+        cityId: userData.city?.id || "",
+        pickupLocation: userData.pickupLocation?.id || "",
+        transport: userData.transport?.id || "",
+        noOfPerson: userData.noOfPerson || 0,
+        email: userData.email || "",
+        pickupDate: userData.pickupDate ? dayjs(userData.pickupDate) : null,
+      });
     } else {
       reset({
         userId: "",
@@ -264,7 +279,7 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
                         variant: "outlined",
                         disabled: isView,
                         error: !!errors.pickupDate,
-                        helperText: errors.pickupDate?.message, 
+                        helperText: errors.pickupDate?.message,
                       },
                     }}
                   />
@@ -273,6 +288,7 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
             </Box>
 
             {/* ✅ City */}
+            <Box sx={{ mb: 2 }}>
             <CustomAutocomplete
               label="City"
               required
@@ -283,10 +299,11 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
               options={cityOptions}
               multiple={false}
               disabled={isView}
-              boxSx={{ mb: 2 }}
             />
+            </Box>
 
             {/* ✅ Pickup Location */}
+            <Box sx={{ mb: 2 }}>
             <CustomAutocomplete
               label="Pickup Location"
               required
@@ -297,10 +314,22 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
               options={locationOptions}
               multiple={false}
               disabled={isView || !selectedCity}
+            />
+            </Box>
+            <CustomInput
+              label="No. of Persons"
+              required
+              name="noOfPerson"
+              type="number"
+              placeholder="Enter Number of Persons"
+              register={register}
+              errors={errors}
+              disabled={isView}
               boxSx={{ mb: 2 }}
             />
 
             {/* ✅ Transport */}
+            <Box sx={{ mb: 2 }}>
             <CustomAutocomplete
               label="Transport"
               required
@@ -313,19 +342,9 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
               disabled={isView || !selectedCity}
               boxSx={{ mb: 2 }}
             />
+            </Box>
 
             {/* ✅ No. of Persons */}
-            <CustomInput
-              label="No. of Persons"
-              required
-              name="noOfPerson"
-              type="number"
-              placeholder="Enter Number of Persons"
-              register={register}
-              errors={errors}
-              disabled={isView}
-              boxSx={{ mb: 2 }}
-            />
 
             {/* ✅ Email */}
             <CustomInput
@@ -361,11 +380,10 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
               size="medium"
               label={isEdit ? "Save Changes" : "Create"}
               loading={isLoading}
-              onClick={()=>{
+              onClick={() => {
                 handleSubmit(onSubmit)();
                 console.log(getValues());
                 console.log(errors);
-                
               }}
             />
           </Box>

@@ -54,6 +54,7 @@ export const useSendOtp = () => {
 
 export const useVerifyOtp = () => {
   const { callApi } = useApi();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, otp }: { id: string; otp: string }) => {
       const response = await callApi(
@@ -62,6 +63,9 @@ export const useVerifyOtp = () => {
       );
       return response as ApiResponse<string>;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myTickets"] });
+    }
   });
 };
 
@@ -76,24 +80,27 @@ export const useUpdateRemarks = () => {
       dropLocation,
     }: {
       id: string;
-      remarks: string;
+      remarks?: string;
       dropLocation?: string;
     }) => {
-      const response = await callApi(
-        `${
-          apiUrls.rideTicket
-        }/update-remarks/${id}?remarks=${encodeURIComponent(remarks)}${
-          dropLocation
-            ? `&dropLocation=${encodeURIComponent(dropLocation)}`
-            : ""
-        }`,
-        "PUT"
-      );
+      let url = `${apiUrls.rideTicket}/update-remarks/${id}`;
+
+      const params = new URLSearchParams();
+
+      if (remarks) params.append("remarks", remarks);
+      if (dropLocation) params.append("dropLocation", dropLocation);
+       params.append("status", "Completed");
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      const response = await callApi(url, "PUT");
       return response as ApiResponse;
     },
+
     onSuccess: () => {
       showSuccess("Remarks updated successfully");
       queryClient.invalidateQueries({ queryKey: ["myTickets"] });
     },
   });
 };
+

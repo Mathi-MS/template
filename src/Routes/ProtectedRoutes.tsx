@@ -18,6 +18,8 @@ export const PublicOnlyRoute: React.FC<{ element: React.ReactElement }> = ({
   if (user?.token) {
     if (user?.user?.role === "user") {
       return <Navigate to="/ride" replace />;
+    } else if (user?.user?.role === "vendor") {
+      return <Navigate to="/masters" replace />;
     }
     return <Navigate to="/tickets" replace />;
   }

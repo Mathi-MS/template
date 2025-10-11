@@ -37,8 +37,16 @@ const UserTable = () => {
     { id: "username", label: "Username" },
     { id: "email", label: "Email" },
     { id: "mobileNo", label: "Mobile No" },
-    { id: "pickupLocationName", label: "Pickup Location" },
-    { id: "transportName", label: "Transport" },
+    {
+      id: "pickupLocationName",
+      label: "Pickup Location",
+      render: (row: any) => row.pickupLocation?.locationName || "",
+    },
+    {
+      id: "transportName",
+      label: "Transport",
+      render: (row: any) => row.transport?.transportId || "",
+    },
     { id: "noOfPerson", label: "Persons" },
     { id: "role", label: "Role" },
     {

@@ -12,22 +12,31 @@ import { useForm } from "react-hook-form";
 import { ForgetPasswordSchema } from "../assets/Validation/Schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
+import { useSendResetLink } from "../Hooks/login";
+import { useState } from "react";
+import { get } from "lodash";
 
 export const ForgetPassword = () => {
   const {
     register,
     handleSubmit,
     reset,
+    getValues, 
     formState: { errors },
   } = useForm({
     resolver: zodResolver(ForgetPasswordSchema),
   });
   const navigate = useNavigate();
-  const onsubmit = async (data: { email: string }) => {
-    console.log(data);
-    navigate("/reset-password");
-    reset();
-  };
+ const { mutate: sendResetLink, isPending } = useSendResetLink();
+
+ const onsubmit = () => {
+  const data = getValues();
+   sendResetLink(data.email, {
+     onSuccess: () => {
+       reset();
+     },
+   });
+ };
   return (
     <>
       <Box sx={{ ...LoginPage }}>
@@ -43,9 +52,9 @@ export const ForgetPassword = () => {
             onSubmit={handleSubmit(onsubmit)}
           >
             <CustomInput
-              label="Email"
+              label="User Id"
               required
-              placeholder="Enter your email"
+              placeholder="Enter your User ID"
               type="text"
               name="email"
               register={register}
@@ -57,6 +66,7 @@ export const ForgetPassword = () => {
               variant="contained"
               label="Send Reset Link"
               size="large"
+              loading={isPending}
             />
           </Box>
           <Typography sx={{ ...LoginPagebottomText }}>

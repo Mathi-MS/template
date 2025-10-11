@@ -7,7 +7,7 @@ import {
 } from "../assets/Styles/LoginStyle";
 import { images } from "../assets/Images/Images";
 import { CustomInput } from "../Custom/CustomInput";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import CustomButton from "../Custom/CustomButton";
@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { ResetPasswordSchema } from "../assets/Validation/Schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
+import { useResetPassword } from "../Hooks/login";
 
 export const ResetPassword = () => {
   const [visibility, setVisibility] = useState(false);
@@ -23,18 +24,40 @@ export const ResetPassword = () => {
     register,
     handleSubmit,
     reset,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(ResetPasswordSchema),
   });
   const navigate = useNavigate();
-  const onsubmit = async (data: {
-    password: string;
-    confirmPassword: string;
-  }) => {
-    console.log(data);
-    navigate("/login");
-    reset();
+  const { mutate: resetPassword, isPending } = useResetPassword();
+
+  // ✅ Extract token from URL query
+  const [token, setToken] = useState<string | null>(null);
+  useEffect(() => {
+    const hash = window.location.hash; 
+    const parts = hash.split("?");
+    if (parts.length > 1) {
+      setToken(parts[1]);
+    }
+  }, []);
+
+  const onsubmit = () => {
+    const data = getValues();
+    if (!token) {
+      console.error("No token found in URL.");
+      return;
+    }
+
+    resetPassword(
+      { ...data, token },
+      {
+        onSuccess: () => {
+          reset();
+          navigate("/login");
+        },
+      }
+    );
   };
   return (
     <>
@@ -128,6 +151,7 @@ export const ResetPassword = () => {
               variant="contained"
               label="Reset Password"
               size="large"
+              loading={isPending}
             />
           </Box>
           <Typography sx={{ ...LoginPagebottomText }}>

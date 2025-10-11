@@ -66,19 +66,26 @@ export const useDeleteUser = () => {
 };
 
 // ✅ Get transports by selected pickup location
-export const useGetTransportsByLocation = (locationId?: string) => {
+export const useGetTransportsByLocation = (
+  locationId?: string,
+  seater?: number
+) => {
   const { callApi } = useApi();
 
   return useQuery({
-    queryKey: ["transportsByLocation", locationId],
+    queryKey: ["transportsByLocation", locationId, seater],
     queryFn: async () => {
-      if (!locationId) return [];
+      if (!locationId || !seater) return [];
+      const params = new URLSearchParams();
+      params.append("seater", seater.toString());
+
       const response = await callApi(
-        `${apiUrls.transport}/city/${locationId}`,
+        `${apiUrls.transport}/city/${locationId}?${params.toString()}`,
         "GET"
       );
       return (response as ApiResponse).data;
     },
-    enabled: !!locationId, 
+    enabled: !!locationId && !!seater, 
   });
 };
+

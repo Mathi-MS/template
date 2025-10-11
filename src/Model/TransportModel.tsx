@@ -39,6 +39,7 @@ const TransportModel = ({ open, onClose, userData, isEdit, isView }: any) => {
       type: "",
       seater: 0,
       vendor: "",
+      email:"",
       vendorName: "",
       city: "",
       cityName: "",
@@ -61,6 +62,7 @@ const TransportModel = ({ open, onClose, userData, isEdit, isView }: any) => {
         vendorName: user?.user?.account?.vendorName || "",
         city:user?.user?.account?.city?.id||"",
         cityName:user?.user?.account?.city?.cityName||"",
+        email:userData.email||"",
       });
     } else {
       reset({
@@ -72,6 +74,7 @@ const TransportModel = ({ open, onClose, userData, isEdit, isView }: any) => {
         contact: "",
         type: "",
         seater: 0,
+        email:"",
         city: user?.user?.account?.city?.id || "",
         cityName: user?.user?.account?.city?.cityName || "",
       });
@@ -186,6 +189,17 @@ const TransportModel = ({ open, onClose, userData, isEdit, isView }: any) => {
             required
             name="contact"
             placeholder="Enter Contact Number"
+            register={register}
+            errors={errors}
+            disabled={isView}
+            boxSx={{ mb: 2 }}
+          />
+          <CustomInput
+            label="Email"
+            required
+            name="email"
+            type="email"
+            placeholder="Enter Email"
             register={register}
             errors={errors}
             disabled={isView}

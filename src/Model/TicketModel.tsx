@@ -13,18 +13,21 @@ import {
 } from "../assets/Styles/CustomModelStyle";
 import { z } from "zod";
 import { useSendOtp, useVerifyOtp } from "../Hooks/ticket";
+import dayjs from "dayjs";
+import { CustomAutocomplete } from "../Custom/CustomAutocomplete";
 
 // Zod schema for Ticket Form
 const ticketSchema = z.object({
   cityName: z.string().min(1, "City is required"),
   pickupLocation: z.string().min(1, "Pickup Location is required"),
-  // dropLocation: z.string().min(1, "Drop Location is required"),
+  dropLocation: z.string().optional(),
   otp: z.string().min(1, "OTP is required"),
 });
 
 export interface TicketFormData {
   cityName: string;
   pickupLocation: string;
+  dropLocation?: string;
   otp: string;
 }
 
@@ -38,6 +41,26 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(userData?.otpSent || false);
+  const [otpExpiryTime, setOtpExpiryTime] = useState<Date | null>(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+
+useEffect(() => {
+  if (!otpExpiryTime) return;
+
+  const interval = setInterval(() => {
+    const diff = dayjs(otpExpiryTime).diff(dayjs(), "second");
+    setTimeLeft(diff > 0 ? diff : 0);
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [otpExpiryTime]);
+
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
 
   const {
     register,
@@ -53,8 +76,12 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
       cityName: userData?.city?.cityName || "",
       pickupLocation: userData?.pickupLocation?.locationName || "",
       otp: "",
+      dropLocation: userData?.dropLocation?.locationName || "",
     },
   });
+
+  console.log(userData);
+  
 
   const sendOtpMutation = useSendOtp();
   const verifyOtpMutation = useVerifyOtp();
@@ -64,6 +91,7 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
       reset({
         cityName: userData?.city?.cityName || "",
         pickupLocation: userData?.pickupLocation?.locationName || "",
+        dropLocation: userData?.dropLocation?.locationName || "",
         otp: userData?.otp || "",
       });
       setOtpSent(userData?.otpSent || false);
@@ -81,19 +109,22 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
       title: loc.id,
     })) || [];
 
-  const handleSendOtp = async () => {
-    if (!userData?.id) return;
-    setOtpLoading(true);
-    try {
-      await sendOtpMutation.mutateAsync(userData.id);
-      showSuccess("OTP sent successfully");
-      setOtpSent(true);
-    } catch (err: any) {
-      showError(err?.message || "Failed to send OTP");
-    } finally {
-      setOtpLoading(false);
-    }
-  };
+const handleSendOtp = async () => {
+  if (!userData?.id) return;
+  setOtpLoading(true);
+  try {
+    const response = await sendOtpMutation.mutateAsync(userData.id);
+    showSuccess("OTP sent successfully");
+    setOtpSent(true);
+    const expiry = dayjs().add(5, "minute").toDate();
+    setOtpExpiryTime(expiry);
+  } catch (err: any) {
+    showError(err?.message || "Failed to send OTP");
+  } finally {
+    setOtpLoading(false);
+  }
+};
+
 
   const onSubmit = async (data: TicketFormData) => {
     try {
@@ -173,21 +204,22 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
             boxSx={{ mb: 2 }}
           />
 
-          {/* <Box sx={{ mb: 2 }}>
-            <CustomAutocomplete
+          {userData?.dropLocation && (
+            <CustomInput
               label="Drop Location"
               required
-              placeholder="Select your Drop Location"
+              placeholder="Enter Drop Location"
+              type="text"
               name="dropLocation"
-              control={control}
+              register={register}
               errors={errors}
-              options={locationOptions}
-              multiple={false}
+              disabled
+              boxSx={{ mb: 2 }}
             />
-          </Box> */}
+          )}
 
           {/* OTP input with button */}
-          {userData?.status?.toLowerCase() !== "ride started" && (
+          {userData?.status?.toLowerCase() === "pending" && (
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
               <CustomInput
                 label="OTP"
@@ -201,13 +233,23 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
                 boxSx={{ mb: 2 }}
               />
               {
-                <CustomButton
-                  type="button"
-                  variant="contained"
-                  label={otpSent ? "Resend OTP" : "Get OTP"}
-                  onClick={handleSendOtp}
-                  loading={otpLoading}
-                />
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  <CustomButton
+                    type="button"
+                    variant="contained"
+                    label={otpSent ? "Resend OTP" : "Get OTP"}
+                    onClick={handleSendOtp}
+                    loading={otpLoading}
+                    disabled={timeLeft > 0}
+                  />
+                  {timeLeft > 0 && (
+                    <Typography
+                      sx={{ fontSize: 12, color: "var(--text-secondary)" }}
+                    >
+                      OTP expires in: {formatTime(timeLeft)}
+                    </Typography>
+                  )}
+                </Box>
               }
             </Box>
           )}
@@ -226,7 +268,7 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
             }}
             onClick={handleClose}
           />
-          {userData?.status?.toLowerCase() !== "ride started" && (
+          {userData?.status?.toLowerCase() === "pending" && (
             <CustomButton
               type="submit"
               variant="contained"

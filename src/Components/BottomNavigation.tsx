@@ -22,13 +22,28 @@ export const MobileBottomNavigation = () => {
     navItems = [
       {
         label: "Create Ride",
-        path: "/create-ride",
+        path: "/ride",
         icon: <AddCircleOutlineIcon />,
       },
+      { label: "Tickets", path: "/tickets", icon: <ReceiptLongOutlinedIcon /> },
       { label: "Help", path: "/help", icon: <HelpOutlineIcon /> },
     ];
+  } else if (role === "vendor") {
+    // Vendor menu (no Tickets)
+    navItems = [
+      {
+        label: "Dashboard",
+        path: "/dashboard",
+        icon: <DashboardOutlinedIcon />,
+      },
+      {
+        label: "Masters",
+        path: "/masters",
+        icon: <ManageAccountsOutlinedIcon />,
+      },
+    ];
   } else {
-    // Full menu for other roles
+    // Full menu for other roles (like admin)
     navItems = [
       {
         label: "Dashboard",
@@ -43,6 +58,7 @@ export const MobileBottomNavigation = () => {
       },
     ];
   }
+
 
   // Find current active index
   const currentIndex = navItems.findIndex(

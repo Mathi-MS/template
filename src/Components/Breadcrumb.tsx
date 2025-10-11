@@ -2,6 +2,7 @@ import { Box, Breadcrumbs, Typography, Link } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronRight } from "@mui/icons-material";
 import { useBreadcrumb } from "../Context/BreadcrumbContext";
+import { useUser } from "../Config/userContext";
 
 interface BreadcrumbItem {
   label: string;
@@ -13,6 +14,8 @@ export const Breadcrumb = () => {
   const { customItems } = useBreadcrumb();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useUser();
+  const role = user?.user?.role?.toLowerCase();
 
   // Define route mappings
   const routeLabels: Record<string, string> = {
@@ -24,7 +27,8 @@ export const Breadcrumb = () => {
 
   // Generate breadcrumb items based on current route
   const generateBreadcrumbItems = (): BreadcrumbItem[] => {
-    const items: BreadcrumbItem[] = [{ label: "Home", path: "/dashboard" }];
+    const homePath = role !== "user" ? "/dashboard" : "/ride";
+    const items: BreadcrumbItem[] = [{ label: "Home", path: homePath }];
 
     const currentPath = location.pathname;
 

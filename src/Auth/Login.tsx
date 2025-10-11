@@ -84,10 +84,12 @@ export const Login = () => {
         Cookies.set("userId", data.email);
         Cookies.set("password", data.password);
       }
-      if (response?.account?.role === "admin") {
+      if (response?.account?.role?.toLowerCase() === "admin") {
         navigate("/dashboard");
-      } else if (response?.account?.role === "user") {
+      } else if (response?.account?.role?.toLowerCase() === "user") {
         navigate("/ride");
+      } else if (response?.account?.role?.toLowerCase() === "vendor") {
+        navigate("/masters");
       }
       reset();
     } catch (error) {

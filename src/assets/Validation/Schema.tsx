@@ -11,11 +11,7 @@ export const LoginSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 export const ForgetPasswordSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: "Email is required" })
-    .email({ message: "Invalid email address" })
-    .trim(),
+  email: z.string().min(1, { message: "User ID is required" }).trim(),
 });
 export const ResetPasswordSchema = z
   .object({
@@ -97,6 +93,7 @@ export const transportSchema = z.object({
   vehicleNo: z.string().min(1, "Vehicle Number is required"),
   ownerDetails: z.string().min(1, "Owner Details is required"),
   contact: z.string().min(1, "Contact is required"),
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
   type: z.string().min(1, "Type is required"),
   seater: z.coerce
     .number()

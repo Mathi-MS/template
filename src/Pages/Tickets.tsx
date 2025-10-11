@@ -1,22 +1,36 @@
 import { Box, Typography, IconButton, Modal } from "@mui/material";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { MdOutlineRemoveRedEye, MdEdit } from "react-icons/md";
 import CloseIcon from "@mui/icons-material/Close";
+import dayjs from "dayjs";
+import { DatePicker } from "antd";
 
 import CustomTable from "../Custom/CustomTable";
 import TicketModal from "../Model/TicketModel";
 import CustomButton from "../Custom/CustomButton";
 import { useGetMyTickets, useUpdateRemarks } from "../Hooks/ticket";
-import { btnStyleContainer, iconStyle, styleModalNew } from "../assets/Styles/CustomModelStyle";
+import {
+  btnStyleContainer,
+  iconStyle,
+  styleModalNew,
+} from "../assets/Styles/CustomModelStyle";
 import { CustomInput } from "../Custom/CustomInput";
 import { CustomAutocomplete } from "../Custom/CustomAutocomplete";
+import { downloadTicketSummaryPDF } from "../Config/pdf";
+
+const { RangePicker } = DatePicker;
 
 export const Tickets = () => {
   const { data } = useGetMyTickets();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
+
+  // 🧭 Filter states
+  const [selectedVendor, setSelectedVendor] = useState<any>(null);
+  const [selectedCity, setSelectedCity] = useState<any>(null);
+  const [dateRange, setDateRange] = useState<[any, any] | null>(null);
 
   const { mutate: updateRemarks, isPending: isLoading } = useUpdateRemarks();
 
@@ -29,9 +43,16 @@ export const Tickets = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      remarks: "",
+      city: "",
+      pickupLocation: "",
       dropLocation: "",
     },
+  });
+
+  const [filters, setFilters] = useState({
+    vendor: null,
+    city: null,
+    dateRange: null,
   });
 
   // 📦 Handlers
@@ -43,7 +64,8 @@ export const Tickets = () => {
   const handleEdit = (ticket: any) => {
     setSelectedTicket(ticket);
     reset({
-      remarks: ticket?.remarks || "",
+      city: ticket?.city?.cityName || "",
+      pickupLocation: ticket?.pickupLocation?.locationName || "",
       dropLocation: ticket?.dropLocation?.id || "",
     });
     setEditOpen(true);
@@ -59,12 +81,13 @@ export const Tickets = () => {
     setSelectedTicket(null);
   };
 
-  const onSubmit = (formData: any) => {
+  const onSubmit = () => {
     if (!selectedTicket) return;
+    const formData = getValues();
+
     updateRemarks(
       {
         id: selectedTicket.id,
-        remarks: formData.remarks,
         dropLocation: formData.dropLocation || undefined,
       },
       {
@@ -82,9 +105,45 @@ export const Tickets = () => {
     sno: idx + 1,
   }));
 
+  const vendorOptions =
+    Array.from(
+      new Set(data?.map((t: any) => t.vendor?.name).filter(Boolean))
+    ).map((name) => ({ label: name, value: name })) || [];
+
+  const cityOptions =
+    Array.from(
+      new Set(data?.map((t: any) => t.city?.cityName).filter(Boolean))
+    ).map((city) => ({ label: city, value: city })) || [];
+
+const filteredRows = useMemo(() => {
+  return numberedRows.filter((ticket: any) => {
+    const matchesVendor = filters.vendor
+      ? ticket.vendor?.name === filters.vendor
+      : true;
+
+    const matchesCity = filters.city
+      ? ticket.city?.cityName === filters.city
+      : true;
+
+    const matchesDate =
+      filters.dateRange && filters.dateRange[0] && filters.dateRange[1]
+        ? dayjs(ticket.pickupDate).isAfter(
+            dayjs(filters.dateRange[0]).startOf("day")
+          ) &&
+          dayjs(ticket.pickupDate).isBefore(
+            dayjs(filters.dateRange[1]).endOf("day")
+          )
+        : true;
+
+    return matchesVendor && matchesCity && matchesDate;
+  });
+}, [numberedRows, filters]);
+
+
   const columns = [
     { id: "sno", label: "S.No" },
     { id: "userId", label: "Recipient Name" },
+    { id: "mobileNo", label: "Recipient Contact No" },
     {
       id: "pickupLocation",
       label: "Pickup Location",
@@ -93,7 +152,16 @@ export const Tickets = () => {
     {
       id: "pickupDate",
       label: "Date",
-      render: (row: any) => new Date(row.pickupDate).toLocaleDateString(),
+      render: (row: any) => {
+        const dateToShow = row.pickupDate || row.createdAt;
+        return dateToShow
+          ? new Date(dateToShow).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "-";
+      },
     },
     { id: "status", label: "Status" },
     {
@@ -125,8 +193,120 @@ export const Tickets = () => {
 
   return (
     <Box>
+      {/* 🧭 Filters + Actions */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        {/* Filters Row */}
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 2,
+            alignItems: "flex-end",
+          }}
+        >
+          <CustomAutocomplete
+            label="Vendor"
+            name="vendor"
+            placeholder="Select Vendor"
+            options={vendorOptions}
+            value={selectedVendor}
+            control={control}
+            onChange={(e: any, val: any) => setSelectedVendor(val)}
+            sx={{ minWidth: 220 }}
+          />
+
+          <CustomAutocomplete
+            label="City"
+            name="city"
+            placeholder="Select City"
+            options={cityOptions}
+            value={selectedCity}
+            control={control}
+            onChange={(e: any, val: any) => setSelectedCity(val)}
+            sx={{ minWidth: 220 }}
+          />
+
+          <Box sx={{ display: "flex", flexDirection: "column" }}>
+            <Typography
+              sx={{
+                mb: 1,
+                fontSize: 14,
+                fontFamily: "Medium_M",
+                color: "var(--text-primary)",
+              }}
+            >
+              Date Range
+            </Typography>
+            <RangePicker
+              value={dateRange}
+              onChange={(values) => setDateRange(values)}
+              format="YYYY-MM-DD"
+              allowClear
+              style={{ height: 40 }}
+            />
+          </Box>
+        </Box>
+
+        {/* Buttons Row */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 2,
+            mt: 1,
+          }}
+        >
+          <CustomButton
+            type="button"
+            variant="outlined"
+            label="Clear Filters"
+            boxSx={{
+              backgroundColor: "transparent",
+              color: "var(--text-secondary)",
+              border: "1px solid var(--border) !important",
+            }}
+            onClick={() => {
+              setSelectedVendor(null);
+              setSelectedCity(null);
+              setDateRange(null);
+              setFilters({
+                vendor: null,
+                city: null,
+                dateRange: null,
+              });
+            }}
+          />
+          <CustomButton
+            type="button"
+            variant="contained"
+            label="Apply Filters"
+            onClick={() => {
+              setFilters({
+                vendor: selectedVendor?.id || null,
+                city: selectedCity?.id || null,
+                dateRange,
+              });
+            }}
+          />
+          <CustomButton
+            type="button"
+            variant="contained"
+            label="Download PDF"
+            onClick={() => downloadTicketSummaryPDF(filteredRows, "My_Tickets")}
+          />
+        </Box>
+      </Box>
+
+      {/* 📋 Tickets Table */}
       <CustomTable
-        rows={numberedRows}
+        rows={filteredRows}
         columns={columns}
         showCheckbox={false}
         sortable
@@ -143,7 +323,7 @@ export const Tickets = () => {
         userData={selectedTicket}
       />
 
-      {/* ✏️ Edit Remarks Modal */}
+      {/* ✏️ Edit Modal */}
       <Modal
         open={editOpen}
         onClose={(event, reason) => {
@@ -153,7 +333,6 @@ export const Tickets = () => {
         sx={{ zIndex: 999999999 }}
       >
         <Box sx={styleModalNew}>
-          {/* Header */}
           <Box
             sx={{
               display: "flex",
@@ -177,55 +356,72 @@ export const Tickets = () => {
             </IconButton>
           </Box>
 
-          {/* Form */}
           <Box
             component="form"
             onSubmit={handleSubmit(onSubmit)}
             sx={{ m: "10px 0px 20px 0px" }}
           >
-            <Box sx={{ mb: 2 }}>
-              <CustomInput
-                label="Remarks"
-                required
-                placeholder="Enter your remarks"
-                type="text"
-                name="remarks"
-                register={register}
-                errors={errors}
-              />
-            </Box>
-
-            <CustomAutocomplete
-              label="Drop Location"
+            <CustomInput
+              label="City"
               required
-              placeholder="Select Drop Location"
-              name="dropLocation"
-              control={control}
+              placeholder="Enter City"
+              type="text"
+              name="city"
+              register={register}
               errors={errors}
-              options={locationOptions}
-              multiple={false}
+              disabled
+              boxSx={{ mb: 2 }}
             />
-
-            <Box sx={{ ...btnStyleContainer, justifyContent: "end", mt: 3 }}>
-              <CustomButton
-                type="button"
-                variant="outlined"
-                label="Cancel"
-                boxSx={{
-                  backgroundColor: "transparent",
-                  color: "var(--text-secondary)",
-                  border: "1px solid var(--border) !important",
-                }}
-                onClick={handleEditClose}
+            <CustomInput
+              label="Pickup Location"
+              required
+              placeholder="Enter Pickup Location"
+              type="text"
+              name="pickupLocation"
+              register={register}
+              errors={errors}
+              disabled
+              boxSx={{ mb: 2 }}
+            />
+            {
+              <CustomAutocomplete
+                label="Drop Location"
+                required
+                placeholder="Select Drop Location"
+                name="dropLocation"
+                control={control}
+                errors={errors}
+                options={locationOptions}
+                multiple={false}
+                disabled={selectedTicket?.dropLocation}
               />
-              <CustomButton
-                type="submit"
-                variant="contained"
-                size="medium"
-                label="Save Changes"
-                loading={isLoading}
-              />
-            </Box>
+            }
+            {selectedTicket?.status?.toLowerCase() === "ride started" && (
+              <Box sx={{ ...btnStyleContainer, justifyContent: "end", mt: 3 }}>
+                <CustomButton
+                  type="reset"
+                  variant="outlined"
+                  label="Cancel"
+                  onClick={handleEditClose}
+                  boxSx={{
+                    backgroundColor: "transparent",
+                    color: "var(--text-secondary)",
+                    border: "1px solid var(--border) !important",
+                  }}
+                />
+                <CustomButton
+                  type="submit"
+                  variant="contained"
+                  size="medium"
+                  label={
+                    selectedTicket?.status?.toLowerCase() === "ride started"
+                      ? "End Ride"
+                      : "Create Ride"
+                  }
+                  loading={isLoading}
+                />
+              </Box>
+            )}
           </Box>
         </Box>
       </Modal>
