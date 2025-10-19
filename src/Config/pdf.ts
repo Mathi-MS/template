@@ -1,13 +1,45 @@
-// src/Config/pdf.ts
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import logoBase64 from "../assets/Images/logo.png";
 
-export const downloadTicketSummaryPDF = (rows: any[], fileName: string) => {
+export const downloadInvoicePDF = (
+  rows: any[],
+  fileName: string,
+  invoiceNumber: string = "INV-1001",
+  invoiceDate: string = new Date().toLocaleDateString(),
+  customerName: string = "John Doe",
+  customerAddress: string = "123 Embassy Street, Capital City"
+) => {
   const doc = new jsPDF();
 
-  // Title
-  doc.setFontSize(16);
-  doc.text("Ticket Summary", 14, 20);
+  doc.addImage(logoBase64, "PNG", 14, 15, 60, 25);
+
+  // Company Name next to logo (right aligned vertically with logo)
+
+  // Invoice title on right
+  doc.setFontSize(18);
+  doc.setTextColor("#000");
+  doc.text("INVOICE", 160, 20, { align: "right" });
+
+  // Invoice info (number, date)
+  doc.setFontSize(11);
+  doc.text(`Invoice No: ${invoiceNumber}`, 160, 30, { align: "right" });
+  doc.text(`Date: ${invoiceDate}`, 160, 37, { align: "right" });
+
+  // Customer billing info
+  doc.setFontSize(12);
+  doc.setTextColor("#000");
+  doc.setFont("helvetica", "normal");
+  doc.text("Bill To:", 14, 55);
+  doc.setFont("helvetica", "bold");
+  doc.text(customerName, 14, 62);
+  doc.setFont("helvetica", "normal");
+  doc.text(customerAddress, 14, 69);
+
+  // Line under header
+  doc.setDrawColor(200);
+  doc.setLineWidth(0.5);
+  doc.line(14, 75, 196, 75);
 
   // Table columns
   const columns = [
@@ -20,7 +52,6 @@ export const downloadTicketSummaryPDF = (rows: any[], fileName: string) => {
     { header: "Cost", dataKey: "cost" },
   ];
 
-  // Table rows
   const tableData = rows.map((row, idx) => ({
     sno: idx + 1,
     recipient: row.userId || "-",
@@ -31,12 +62,19 @@ export const downloadTicketSummaryPDF = (rows: any[], fileName: string) => {
     cost: row.cost != null ? `$${row.cost.toFixed(2)}` : "-",
   }));
 
+  // Data table
   autoTable(doc, {
-    startY: 30,
+    startY: 80,
     head: [columns.map((c) => c.header)],
-    body: tableData.map((d) => [d.sno,d.recipient, d.recepientNo, d.city, d.pickup, d.drop, d.cost]),
-
-    // ✅ Apply colors and styling
+    body: tableData.map((d) => [
+      d.sno,
+      d.recipient,
+      d.recepientNo,
+      d.city,
+      d.pickup,
+      d.drop,
+      d.cost,
+    ]),
     styles: {
       halign: "center",
       valign: "middle",
@@ -45,19 +83,25 @@ export const downloadTicketSummaryPDF = (rows: any[], fileName: string) => {
       lineWidth: 0.1,
     },
     headStyles: {
-      fillColor: [70, 95, 255], // --primary (#465fff)
-      textColor: [255, 255, 255], // white text
+      fillColor: [70, 95, 255],
+      textColor: [255, 255, 255],
       fontStyle: "bold",
     },
     alternateRowStyles: {
-      fillColor: [236, 243, 255], // --secondary (#ecf3ff)
-    },
-    bodyStyles: {
-      fillColor: [255, 255, 255],
-      textColor: [0, 0, 0],
+      fillColor: [236, 243, 255],
     },
   });
 
-  // Save the file
+  // Footer
+  const pageHeight = doc.internal.pageSize.height;
+  doc.setFontSize(10);
+  doc.setTextColor("#888");
+  doc.text(
+    "Thank you for choosing TTMS. For queries, contact support@ttms.com",
+    14,
+    pageHeight - 10
+  );
+
+  // Save PDF
   doc.save(`${fileName}.pdf`);
 };

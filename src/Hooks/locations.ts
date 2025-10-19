@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiUrls } from "../api/apiUrl";
 import type { ApiResponse } from "../Interface/Custom";
 import { useApi } from "../api/apiService";
-import { showSuccess } from "../Custom/CustomToast";
+import { showError, showSuccess } from "../Custom/CustomToast";
 
 // GET LOCATIONS
 export const useGetLocations = () => {
@@ -33,6 +33,7 @@ export const useCreateLocation = () => {
     },
     onError: (error) => {
       console.log(error);
+      showError(error?.message);
     },
   });
 };

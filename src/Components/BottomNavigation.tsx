@@ -28,21 +28,7 @@ export const MobileBottomNavigation = () => {
       { label: "Tickets", path: "/tickets", icon: <ReceiptLongOutlinedIcon /> },
       { label: "Help", path: "/help", icon: <HelpOutlineIcon /> },
     ];
-  } else if (role === "vendor") {
-    // Vendor menu (no Tickets)
-    navItems = [
-      {
-        label: "Dashboard",
-        path: "/dashboard",
-        icon: <DashboardOutlinedIcon />,
-      },
-      {
-        label: "Masters",
-        path: "/masters",
-        icon: <ManageAccountsOutlinedIcon />,
-      },
-    ];
-  } else {
+  }  else {
     // Full menu for other roles (like admin)
     navItems = [
       {

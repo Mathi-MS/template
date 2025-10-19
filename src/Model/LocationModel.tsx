@@ -103,10 +103,7 @@ const LocationModel = ({
             message: err.errors[field],
           });
         });
-      } else {
-        showError("Something went wrong while saving location");
       }
-      showError("Something went wrong while saving location");
     } finally {
       setLoading(false);
     }

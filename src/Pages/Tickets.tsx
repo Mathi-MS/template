@@ -17,7 +17,7 @@ import {
 } from "../assets/Styles/CustomModelStyle";
 import { CustomInput } from "../Custom/CustomInput";
 import { CustomAutocomplete } from "../Custom/CustomAutocomplete";
-import { downloadTicketSummaryPDF } from "../Config/pdf";
+import { downloadInvoicePDF } from "../Config/pdf";
 
 const { RangePicker } = DatePicker;
 
@@ -194,46 +194,38 @@ const filteredRows = useMemo(() => {
   return (
     <Box>
       {/* 🧭 Filters + Actions */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          mb: 3,
-        }}
-      >
+      <Box sx={{ mb: 3 }}>
         {/* Filters Row */}
         <Box
           sx={{
             display: "flex",
-            flexWrap: "wrap",
-            gap: 2,
-            alignItems: "flex-end",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 2, // spacing between filters
+            mb: 2, // spacing below filters
           }}
         >
           <CustomAutocomplete
-            label="Vendor"
+            label=""
             name="vendor"
             placeholder="Select Vendor"
             options={vendorOptions}
             value={selectedVendor}
             control={control}
             onChange={(e: any, val: any) => setSelectedVendor(val)}
-            sx={{ minWidth: 220 }}
           />
 
           <CustomAutocomplete
-            label="City"
+            label=""
             name="city"
             placeholder="Select City"
             options={cityOptions}
             value={selectedCity}
             control={control}
             onChange={(e: any, val: any) => setSelectedCity(val)}
-            sx={{ minWidth: 220 }}
           />
 
-          <Box sx={{ display: "flex", flexDirection: "column" }}>
+          <Box>
             <Typography
               sx={{
                 mb: 1,
@@ -260,7 +252,6 @@ const filteredRows = useMemo(() => {
             display: "flex",
             justifyContent: "flex-end",
             gap: 2,
-            mt: 1,
           }}
         >
           <CustomButton
@@ -283,6 +274,7 @@ const filteredRows = useMemo(() => {
               });
             }}
           />
+
           <CustomButton
             type="button"
             variant="contained"
@@ -295,11 +287,12 @@ const filteredRows = useMemo(() => {
               });
             }}
           />
+
           <CustomButton
             type="button"
             variant="contained"
             label="Download PDF"
-            onClick={() => downloadTicketSummaryPDF(filteredRows, "My_Tickets")}
+            onClick={() => downloadInvoicePDF(filteredRows, "My_Tickets")}
           />
         </Box>
       </Box>

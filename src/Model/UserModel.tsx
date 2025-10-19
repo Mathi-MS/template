@@ -98,7 +98,7 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
 
   const transportOptions =
     (transports ?? []).map((t: any) => ({
-      label: `${t.transportId} - ${t.vehicleNo}`,
+      label: `${t.type}`,
       title: t.id,
     })) ?? [];
 

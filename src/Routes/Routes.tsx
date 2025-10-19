@@ -1,7 +1,6 @@
 import { createHashRouter } from "react-router-dom";
 import { Layout } from "../Components/Layout";
 import { Login } from "../Auth/Login";
-import { Dashboard } from "../Components/Dashboard";
 import { Tickets } from "../Pages/Tickets";
 import { Masters } from "../Components/Masters";
 import { Profile } from "../Components/Profile";
@@ -10,6 +9,7 @@ import Timeout from "../Components/Timeout";
 import { ForgetPassword } from "../Auth/ForgetPassword";
 import { ResetPassword } from "../Auth/ResetPassword";
 import { CreateRide } from "../Pages/Ride";
+import Dashboard from "../Components/Dashboard";
 
 const routes = createHashRouter([
   {

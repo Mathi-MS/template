@@ -72,7 +72,7 @@ export const Location = () => {
     if (!city) return;
 
     if (city.locations?.length < 2) {
-      showError("At least 2 locations required to create cost combinations.");
+      // showError("At least 2 locations required to create cost combinations.");
       return;
     }
 

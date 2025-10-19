@@ -122,7 +122,7 @@ const LocationCostModel = ({
       );
       const cityLocations = selectedCityObj?.locations ?? [];
       if (cityLocations.length < 2) {
-        showError("At least 2 locations required to create cost combinations.");
+        // showError("At least 2 locations required to create cost combinations.");
         replace([]);
         return;
       }

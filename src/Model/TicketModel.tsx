@@ -15,6 +15,7 @@ import { z } from "zod";
 import { useSendOtp, useVerifyOtp } from "../Hooks/ticket";
 import dayjs from "dayjs";
 import { CustomAutocomplete } from "../Custom/CustomAutocomplete";
+import { useUser } from "../Config/userContext";
 
 // Zod schema for Ticket Form
 const ticketSchema = z.object({
@@ -43,6 +44,7 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
   const [otpSent, setOtpSent] = useState(userData?.otpSent || false);
   const [otpExpiryTime, setOtpExpiryTime] = useState<Date | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
+  const {user} = useUser();
 
 useEffect(() => {
   if (!otpExpiryTime) return;
@@ -219,7 +221,7 @@ const handleSendOtp = async () => {
           )}
 
           {/* OTP input with button */}
-          {userData?.status?.toLowerCase() === "pending" && (
+          {(userData?.status?.toLowerCase() === "pending" && user?.user?.role?.toLowerCase() === "transport") && (
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
               <CustomInput
                 label="OTP"
@@ -268,7 +270,7 @@ const handleSendOtp = async () => {
             }}
             onClick={handleClose}
           />
-          {userData?.status?.toLowerCase() === "pending" && (
+          {(userData?.status?.toLowerCase() === "pending" && user?.user?.role?.toLowerCase() === "transport") && (
             <CustomButton
               type="submit"
               variant="contained"

@@ -27,7 +27,7 @@ export const CreateRide = () => {
       pickupLocation: "",
       dropLocation: "",
       vehicle:
-        `${user?.user?.account?.transport?.transportId} - ${user?.user?.account?.transport?.vehicleNo}` ||
+        `${user?.user?.account?.transport?.type} ` ||
         "",
       transport: user?.user?.account?.transport?.id || "",
     },

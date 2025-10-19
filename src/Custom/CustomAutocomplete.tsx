@@ -23,7 +23,7 @@ export const CustomAutocomplete = ({
   errors,
   control,
   helperText,
-  disabled,
+  disabled, 
 }: any) => {
   const errorMessage = get(errors, `${name}.message`, null);
 
