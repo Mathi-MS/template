@@ -10,26 +10,19 @@ import {
 } from "@mui/material";
 import { CiFilter } from "react-icons/ci";
 import { AiOutlineAudit } from "react-icons/ai";
-import { Close, Download as DownloadIcon } from "@mui/icons-material";
-import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
-import RunningWithErrorsIcon from "@mui/icons-material/RunningWithErrors";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import SavingsIcon from "@mui/icons-material/Savings";
+import { Close } from "@mui/icons-material";
 import UsersList from "./UserList";
 import CustomButton from "../Custom/CustomButton";
 import CardBox from "./card";
 import SpendingChart from "./SpendingChart";
 import AccountsCarousel from "./AccountsCarousel";
-import RecentTransactions from "./RecentTransactions";
 import StatsChart from "./TopStatsChart";
-import OverView from "./OverviewCards";
-
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import { Controller, useForm } from "react-hook-form";
 import { useApi } from "../api/apiService";
 import { useGetDashboardData } from "../Hooks/dashboard";
 import { useUser } from "../Config/userContext";
 import { CustomAutocomplete } from "../Custom/CustomAutocomplete";
-import { useDashboardCountQuery } from "../Hooks/Payout";
 import { useGetCities } from "../Hooks/city";
 import type { CityFormData } from "../Model/CityModel";
 import { useGetLocations } from "../Hooks/locations";
@@ -45,12 +38,17 @@ import PersonIcon from "@mui/icons-material/Person";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import { zodResolver } from "@hookform/resolvers/zod";
+import z from "zod";
+import dayjs from "dayjs";
 // Layout base
 export const DashboardContainerSx: SxProps<Theme> = {
   display: "grid",
   gridTemplateColumns: "repeat(12, 1fr)",
   gap: 1.5,
 };
+
+dayjs.extend(isSameOrAfter);
 
 export const SectionSx = (
   span: number,
@@ -64,6 +62,44 @@ export const SectionSx = (
   "@media (max-width:1024px)": { gridColumn: "span 12" },
 });
 
+const schema = z
+  .object({
+    cityId: z.string().optional(),
+    locationId: z.string().optional(),
+    vendorId: z.string().optional(),
+    status: z.string().optional(),
+    startDate: z
+      .preprocess((val) => {
+        if (!val) return null;
+        if (val instanceof Date) return val;
+        if (dayjs.isDayjs(val)) return val.toDate();
+        return new Date(val);
+      }, z.date().nullable())
+      .optional(),
+
+    endDate: z
+      .preprocess((val) => {
+        if (!val) return null;
+        if (val instanceof Date) return val;
+        if (dayjs.isDayjs(val)) return val.toDate();
+        return new Date(val);
+      }, z.date().nullable())
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && !data.endDate) return false;
+      if (data.startDate && data.endDate) {
+        return dayjs(data.endDate).isSameOrAfter(dayjs(data.startDate));
+      }
+      return true;
+    },
+    {
+      message: "End date is required and cannot be before start date",
+      path: ["endDate"],
+    }
+  );
+
 const Dashboard: React.FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentSlogan, setCurrentSlogan] = useState(0);
@@ -74,6 +110,25 @@ const Dashboard: React.FC = () => {
     status: "",
     startDate: null,
     endDate: null,
+  });
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    getValues,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      cityId: "",
+      locationId: "",
+      vendorId: "",
+      status: "",
+      startDate: null,
+      endDate: null,
+    },
   });
 
   const { user } = useUser();
@@ -124,21 +179,10 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    watch,
-    clearErrors,
-    control,
-    formState: { errors },
-  } = useForm();
-
   const { callApi } = useApi();
 
   const ridesByCitiesData = (dashboardData?.ridesByCities || []).map(
-    (city:any) => ({
+    (city: any) => ({
       label: city.cityName,
       value: city.count,
     })
@@ -162,6 +206,8 @@ const Dashboard: React.FC = () => {
         >
           <form
             onSubmit={handleSubmit((data) => {
+              console.log(data);
+
               setFilterValues({
                 cityId: data.cityId || "",
                 locationId: data.locationId || "",
@@ -288,7 +334,6 @@ const Dashboard: React.FC = () => {
                       slotProps={{
                         textField: {
                           fullWidth: true,
-                          required: true,
                           variant: "outlined",
                           error: !!errors.startDate,
                           helperText: errors.startDate?.message,
@@ -328,7 +373,6 @@ const Dashboard: React.FC = () => {
                       slotProps={{
                         textField: {
                           fullWidth: true,
-                          required: true,
                           variant: "outlined",
                           error: !!errors.endDate,
                           helperText: errors.endDate?.message,
@@ -373,6 +417,9 @@ const Dashboard: React.FC = () => {
                   color: "var(--white)",
                   width: "100%",
                   "&:hover": { backgroundColor: "var(--primary-dark)" },
+                }}
+                onClick={() => {
+                  console.log(getValues());
                 }}
               />
             </Box>

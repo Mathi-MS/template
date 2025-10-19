@@ -1,5 +1,5 @@
 import { Box, Typography, IconButton, Modal } from "@mui/material";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { MdOutlineRemoveRedEye, MdEdit } from "react-icons/md";
 import CloseIcon from "@mui/icons-material/Close";
@@ -18,6 +18,7 @@ import {
 import { CustomInput } from "../Custom/CustomInput";
 import { CustomAutocomplete } from "../Custom/CustomAutocomplete";
 import { downloadInvoicePDF } from "../Config/pdf";
+import { useGetVendors } from "../Hooks/vendor";
 
 const { RangePicker } = DatePicker;
 
@@ -98,47 +99,50 @@ export const Tickets = () => {
       }
     );
   };
+  const { data: vendorData } = useGetVendors();
 
   // 🔢 Table Data
   const numberedRows = (data ?? []).map((row: any, idx: number) => ({
     ...row,
     sno: idx + 1,
+    vendorInfo:
+      vendorData?.find((v: any) => v.id === row.transport?.vendorId) || null,
   }));
 
   const vendorOptions =
-    Array.from(
-      new Set(data?.map((t: any) => t.vendor?.name).filter(Boolean))
-    ).map((name) => ({ label: name, value: name })) || [];
+    vendorData?.map((v: any) => ({
+      label: v.vendorName,
+      value: v.id,
+    })) || [];
 
   const cityOptions =
     Array.from(
       new Set(data?.map((t: any) => t.city?.cityName).filter(Boolean))
     ).map((city) => ({ label: city, value: city })) || [];
 
-const filteredRows = useMemo(() => {
-  return numberedRows.filter((ticket: any) => {
-    const matchesVendor = filters.vendor
-      ? ticket.vendor?.name === filters.vendor
-      : true;
-
-    const matchesCity = filters.city
-      ? ticket.city?.cityName === filters.city
-      : true;
-
-    const matchesDate =
-      filters.dateRange && filters.dateRange[0] && filters.dateRange[1]
-        ? dayjs(ticket.pickupDate).isAfter(
-            dayjs(filters.dateRange[0]).startOf("day")
-          ) &&
-          dayjs(ticket.pickupDate).isBefore(
-            dayjs(filters.dateRange[1]).endOf("day")
-          )
+  const filteredRows = useMemo(() => {
+    return numberedRows.filter((ticket: any) => {
+      const matchesVendor = filters.vendor
+        ? ticket.vendor?.name === filters.vendor
         : true;
 
-    return matchesVendor && matchesCity && matchesDate;
-  });
-}, [numberedRows, filters]);
+      const matchesCity = filters.city
+        ? ticket.city?.cityName === filters.city
+        : true;
 
+      const matchesDate =
+        filters.dateRange && filters.dateRange[0] && filters.dateRange[1]
+          ? dayjs(ticket.pickupDate).isAfter(
+              dayjs(filters.dateRange[0]).startOf("day")
+            ) &&
+            dayjs(ticket.pickupDate).isBefore(
+              dayjs(filters.dateRange[1]).endOf("day")
+            )
+          : true;
+
+      return matchesVendor && matchesCity && matchesDate;
+    });
+  }, [numberedRows, filters]);
 
   const columns = [
     { id: "sno", label: "S.No" },
@@ -190,6 +194,12 @@ const filteredRows = useMemo(() => {
         label: loc.locationName,
         title: loc.id,
       })) || [];
+
+  useEffect(() => {
+    if (vendorData?.length === 1) {
+      setSelectedVendor(vendorData[0]); // automatically select the only vendor
+    }
+  }, [vendorData]);
 
   return (
     <Box>
@@ -292,7 +302,17 @@ const filteredRows = useMemo(() => {
             type="button"
             variant="contained"
             label="Download PDF"
-            onClick={() => downloadInvoicePDF(filteredRows, "My_Tickets")}
+            onClick={() => {
+              const vendorCity = selectedVendor?.city?.cityName || "";
+              downloadInvoicePDF(
+                filteredRows,
+                "My_Tickets",
+                "INV-1001",
+                new Date().toLocaleDateString(),
+                selectedVendor,
+                { cityName: vendorCity }
+              );
+            }}
           />
         </Box>
       </Box>

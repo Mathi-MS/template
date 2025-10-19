@@ -7,39 +7,41 @@ export const downloadInvoicePDF = (
   fileName: string,
   invoiceNumber: string = "INV-1001",
   invoiceDate: string = new Date().toLocaleDateString(),
-  customerName: string = "John Doe",
+  vendorInfo: any = null, // optional vendor info
+  cityInfo: any = null, // optional city info
   customerAddress: string = "123 Embassy Street, Capital City"
 ) => {
   const doc = new jsPDF();
 
+  // Logo
   doc.addImage(logoBase64, "PNG", 14, 15, 60, 25);
 
-  // Company Name next to logo (right aligned vertically with logo)
-
-  // Invoice title on right
+  // Invoice title & info
   doc.setFontSize(18);
   doc.setTextColor("#000");
   doc.text("INVOICE", 160, 20, { align: "right" });
 
-  // Invoice info (number, date)
   doc.setFontSize(11);
   doc.text(`Invoice No: ${invoiceNumber}`, 160, 30, { align: "right" });
   doc.text(`Date: ${invoiceDate}`, 160, 37, { align: "right" });
 
-  // Customer billing info
+  // Vendor & City Info (Bill To)
   doc.setFontSize(12);
-  doc.setTextColor("#000");
   doc.setFont("helvetica", "normal");
   doc.text("Bill To:", 14, 55);
   doc.setFont("helvetica", "bold");
-  doc.text(customerName, 14, 62);
+
+  const vendorName = vendorInfo?.vendorName || "N/A";
+  const cityName = cityInfo?.cityName || "N/A";
+
+  doc.text(`${vendorName}`, 14, 62);
   doc.setFont("helvetica", "normal");
-  doc.text(customerAddress, 14, 69);
+  doc.text(`City: ${cityName}`, 14, 69);
 
   // Line under header
   doc.setDrawColor(200);
   doc.setLineWidth(0.5);
-  doc.line(14, 75, 196, 75);
+  doc.line(14, 82, 196, 82);
 
   // Table columns
   const columns = [
@@ -62,9 +64,8 @@ export const downloadInvoicePDF = (
     cost: row.cost != null ? `$${row.cost.toFixed(2)}` : "-",
   }));
 
-  // Data table
   autoTable(doc, {
-    startY: 80,
+    startY: 85,
     head: [columns.map((c) => c.header)],
     body: tableData.map((d) => [
       d.sno,
@@ -102,6 +103,6 @@ export const downloadInvoicePDF = (
     pageHeight - 10
   );
 
-  // Save PDF
   doc.save(`${fileName}.pdf`);
 };
+
