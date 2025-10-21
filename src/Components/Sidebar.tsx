@@ -206,7 +206,7 @@ export const Sidebar = () => {
         label: "Tickets",
         path: "/tickets",
         icon: <ReceiptLongOutlinedIcon fontSize="small" />,
-        roles: ["superadmin","admin","vendor","transport","user"],
+        roles: ["superadmin","admin","transport"],
       },
       {
         label: "Masters",

@@ -25,7 +25,6 @@ export const MobileBottomNavigation = () => {
         path: "/ride",
         icon: <AddCircleOutlineIcon />,
       },
-      { label: "Tickets", path: "/tickets", icon: <ReceiptLongOutlinedIcon /> },
       { label: "Help", path: "/help", icon: <HelpOutlineIcon /> },
     ];
   }  else {

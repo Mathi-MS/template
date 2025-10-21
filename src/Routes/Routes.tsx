@@ -8,8 +8,8 @@ import { ProtectedRoute, PublicOnlyRoute } from "./ProtectedRoutes";
 import Timeout from "../Components/Timeout";
 import { ForgetPassword } from "../Auth/ForgetPassword";
 import { ResetPassword } from "../Auth/ResetPassword";
-import { CreateRide } from "../Pages/Ride";
 import Dashboard from "../Components/Dashboard";
+import CreateRide from "../Pages/Ride";
 
 const routes = createHashRouter([
   {
