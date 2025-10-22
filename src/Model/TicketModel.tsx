@@ -208,7 +208,7 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
             boxSx={{ mb: 2 }}
           />
 
-          {/* {userData?.dropLocation && (
+          {userData?.dropLocation ? (
             <CustomInput
               label="Drop Location"
               required
@@ -220,9 +220,9 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
               disabled
               boxSx={{ mb: 2 }}
             />
-          )} */}
+          )
 
-          <Box sx={{ mb: 2 }}>
+          :(<Box sx={{ mb: 2 }}>
             <CustomAutocomplete
               label="Drop Location"
               required
@@ -233,10 +233,10 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
               options={locationOptions.filter(
                 (opt: any) => opt.title !== userData?.pickupLocation?.id
               )}
-              disabled={user?.user?.role?.toLowerCase() !== "transport" || userData?.dropLocation}
+              disabled={user?.user?.role?.toLowerCase() !== "transport"}
               multiple={false}
             />
-          </Box>
+          </Box> )}
 
           {/* OTP input with button */}
           {userData?.status?.toLowerCase() === "pending" &&
