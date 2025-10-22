@@ -9,6 +9,8 @@ import { useState, useMemo, useEffect } from "react";
 import { useUser } from "../Config/userContext";
 import { useCreateRideTicket, useGetMyTickets } from "../Hooks/ticket";
 import { showError, showSuccess } from "../Custom/CustomToast";
+import dayjs from "dayjs";
+import noRide from "../assets/images/car.png";
 
 const CreateRide = () => {
   const { user } = useUser();
@@ -57,23 +59,21 @@ const CreateRide = () => {
     return allLocationOptions.filter((loc) => loc.title !== pickupLocation);
   }, [pickupLocation, allLocationOptions]);
 
-  // 🟢 Handle single-ticket admin/superadmin logic
+  // Handle admin/superadmin logic
   useEffect(() => {
     if (data && data.length === 1) {
       const ticket = data[0];
       const isAdmin =
         ticket.createdRole?.toLowerCase() === "admin" ||
         ticket.createdRole?.toLowerCase() === "superadmin";
-      const isCompleted = ticket.status?.toLowerCase() === "completed"; // 🟢 NEW condition
+      const isCompleted = ticket.status?.toLowerCase() === "completed";
 
-      // 🟢 If completed, show normal form (pickup/drop visible & editable)
       if (isCompleted) {
         setHideDrop(false);
         setIsDisabled(false);
         return;
       }
 
-      // 🟠 If admin/superadmin and not completed
       if (isAdmin) {
         if (ticket?.pickupLocation) {
           setValue("pickupLocation", ticket.pickupLocation?.id);
@@ -92,14 +92,13 @@ const CreateRide = () => {
   const onSubmit = async () => {
     const formData = getValues();
 
-    // 🟢 Handle single-ticket cases
     if (data?.length === 1) {
       const ticket = data[0];
       const isAdmin =
         ticket.createdRole?.toLowerCase() === "admin" ||
         ticket.createdRole?.toLowerCase() === "superadmin";
       if (isAdmin) {
-        showSuccess("You successfully created your ride.");
+        showSuccess("You have confirmed your ride.");
         setIsDisabled(true);
         return;
       }
@@ -124,6 +123,164 @@ const CreateRide = () => {
     }
   };
 
+  const today = dayjs().format("YYYY-MM-DD");
+
+  if (data && data.length === 1 && data[0].status?.toLowerCase() !== "completed") {
+    const ticket = data[0];
+    const isPickupToday = ticket.pickupDate === today;
+
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          minHeight: "100vh",
+          backgroundColor: "var(--background)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Box sx={{ alignSelf: "flex-end", mb: 2 }}>
+          <Tooltip title="Need help? Contact support.">
+            <IconButton sx={{ color: "var(--text-secondary)" }}>
+              <HelpOutlineIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {isPickupToday ? (
+          <>
+            <Typography
+              variant="h5"
+              sx={{
+                fontFamily: "Medium_M",
+                color: "var(--text-primary)",
+                mb: 3,
+                textAlign: "center",
+              }}
+            >
+              🚗 It’s Ride Day!
+            </Typography>
+
+            <Box
+              sx={{
+                backgroundColor: "var(--card-bg)",
+                p: 3,
+                borderRadius: 3,
+                boxShadow: "0px 4px 10px rgba(0,0,0,0.08)",
+                width: "100%",
+                maxWidth: 420,
+              }}
+            >
+              <CustomInput
+                label="City"
+                type="text"
+                name="cityName"
+                value={ticket.city?.cityName || ""}
+                disabled
+              />
+
+              <CustomInput
+                label="Pickup Location"
+                type="text"
+                name="pickupLocation"
+                value={ticket.pickupLocation?.locationName || ""}
+                disabled
+                boxSx={{ mt: 2 }}
+              />
+
+              <CustomInput
+                label="Vehicle Number"
+                type="text"
+                name="vehicleNo"
+                value={ticket.transport?.vehicleNo || ""}
+                disabled
+                boxSx={{ mt: 2 }}
+              />
+
+              <CustomInput
+                label="Driver Name"
+                type="text"
+                name="ownerDetails"
+                value={ticket.transport?.ownerDetails || ""}
+                disabled
+                boxSx={{ mt: 2 }}
+              />
+
+              <CustomInput
+                label="Contact Number"
+                type="text"
+                name="contact"
+                value={ticket.transport?.contact || ""}
+                disabled
+                boxSx={{ mt: 2 }}
+              />
+
+              <CustomInput
+                label="Pickup Date"
+                type="text"
+                name="pickupDate"
+                value={dayjs(ticket.pickupDate).format("DD MMM YYYY")}
+                disabled
+                boxSx={{ mt: 2 }}
+              />
+
+              <Box
+                sx={{ ...btnStyleContainer, justifyContent: "center", mt: 3 }}
+              >
+                <CustomButton
+                  type="button"
+                  variant="contained"
+                  size="medium"
+                  label="Confirm Ride"
+                  onClick={() => {onSubmit()}}
+                  disabled={(() => {
+                    if (isDisabled) return true;
+                    if (!data || data.length === 0) return false;
+                    const status = data[0]?.status?.toLowerCase();
+                    if (status === "pending" || status === "completed")
+                      return false;
+                    if (status === "ride started") return true;
+                    return false;
+                  })()}
+                />
+              </Box>
+            </Box>
+          </>
+        ) : (
+          <Box
+            sx={{
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <img
+              src={noRide}
+              alt="No Ride Yet"
+              style={{ width: "220px", marginBottom: "1.5rem" }}
+            />
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: "Medium_M",
+                mb: 1,
+                color: "var(--text-primary)",
+              }}
+            >
+              Your ride day hasn’t come yet! 🚙
+            </Typography>
+            <Typography sx={{ color: "var(--text-secondary)" }}>
+              Please check back on your scheduled pickup date.
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
+  }
+
+  // 🟢 Default form when there are no tickets
   return (
     <Box
       sx={{
@@ -192,7 +349,6 @@ const CreateRide = () => {
           boxSx={{ mt: 2 }}
         />
 
-        {/* Pickup */}
         <Box sx={{ mt: 2 }}>
           <CustomAutocomplete
             label="Pickup Location"
@@ -211,7 +367,6 @@ const CreateRide = () => {
           />
         </Box>
 
-        {!hideDrop && (
           <Box sx={{ mt: 2 }}>
             <CustomAutocomplete
               label="Drop Location"
@@ -224,7 +379,6 @@ const CreateRide = () => {
               multiple={false}
             />
           </Box>
-        )}
 
         <Box sx={{ ...btnStyleContainer, justifyContent: "center", mt: 3 }}>
           <CustomButton
@@ -233,14 +387,6 @@ const CreateRide = () => {
             size="medium"
             label="Confirm Ride"
             loading={isLoading}
-            disabled={(() => {
-              if (isDisabled) return true;
-              if (!data || data.length === 0) return false;
-              const status = data[0]?.status?.toLowerCase();
-              if (status === "pending" || status === "completed") return false;
-              if (status === "ride started") return true;
-              return false;
-            })()}
           />
         </Box>
       </Box>

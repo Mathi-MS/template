@@ -16,6 +16,7 @@ import { useSendOtp, useVerifyOtp } from "../Hooks/ticket";
 import dayjs from "dayjs";
 import { CustomAutocomplete } from "../Custom/CustomAutocomplete";
 import { useUser } from "../Config/userContext";
+import { get } from "lodash";
 
 // Zod schema for Ticket Form
 const ticketSchema = z.object({
@@ -44,19 +45,18 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
   const [otpSent, setOtpSent] = useState(userData?.otpSent || false);
   const [otpExpiryTime, setOtpExpiryTime] = useState<Date | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
-  const {user} = useUser();
+  const { user } = useUser();
 
-useEffect(() => {
-  if (!otpExpiryTime) return;
+  useEffect(() => {
+    if (!otpExpiryTime) return;
 
-  const interval = setInterval(() => {
-    const diff = dayjs(otpExpiryTime).diff(dayjs(), "second");
-    setTimeLeft(diff > 0 ? diff : 0);
-  }, 1000);
+    const interval = setInterval(() => {
+      const diff = dayjs(otpExpiryTime).diff(dayjs(), "second");
+      setTimeLeft(diff > 0 ? diff : 0);
+    }, 1000);
 
-  return () => clearInterval(interval);
-}, [otpExpiryTime]);
-
+    return () => clearInterval(interval);
+  }, [otpExpiryTime]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -70,6 +70,7 @@ useEffect(() => {
     reset,
     control,
     getValues,
+    watch,
     setValue,
     formState: { errors },
   } = useForm<TicketFormData>({
@@ -83,7 +84,6 @@ useEffect(() => {
   });
 
   console.log(userData);
-  
 
   const sendOtpMutation = useSendOtp();
   const verifyOtpMutation = useVerifyOtp();
@@ -105,28 +105,22 @@ useEffect(() => {
     onClose();
   };
 
-  const locationOptions =
-    userData?.city?.locations?.map((loc: any) => ({
-      label: loc.locationName,
-      title: loc.id,
-    })) || [];
 
-const handleSendOtp = async () => {
-  if (!userData?.id) return;
-  setOtpLoading(true);
-  try {
-    const response = await sendOtpMutation.mutateAsync(userData.id);
-    showSuccess("OTP sent successfully");
-    setOtpSent(true);
-    const expiry = dayjs().add(5, "minute").toDate();
-    setOtpExpiryTime(expiry);
-  } catch (err: any) {
-    showError(err?.message || "Failed to send OTP");
-  } finally {
-    setOtpLoading(false);
-  }
-};
-
+  const handleSendOtp = async () => {
+    if (!userData?.id) return;
+    setOtpLoading(true);
+    try {
+      const response = await sendOtpMutation.mutateAsync(userData.id);
+      showSuccess("OTP sent successfully");
+      setOtpSent(true);
+      const expiry = dayjs().add(5, "minute").toDate();
+      setOtpExpiryTime(expiry);
+    } catch (err: any) {
+      showError(err?.message || "Failed to send OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
   const onSubmit = async (data: TicketFormData) => {
     try {
@@ -137,7 +131,7 @@ const handleSendOtp = async () => {
         return;
       }
 
-      await verifyOtpMutation.mutateAsync({ id: userData.id, otp: data.otp });
+      await verifyOtpMutation.mutateAsync({ id: userData.id, otp: data.otp, dropLocation: droplocation });
       showSuccess("Ticket verified successfully");
       handleClose();
     } catch (err: any) {
@@ -146,6 +140,14 @@ const handleSendOtp = async () => {
       setIsLoading(false);
     }
   };
+
+  const locationOptions = userData?.city?.locations?.map((loc: any) => ({
+    label: loc.locationName,
+    title: loc.id,
+  })) || [];
+
+  const droplocation = watch("dropLocation");
+  
 
   return (
     <Modal
@@ -206,7 +208,7 @@ const handleSendOtp = async () => {
             boxSx={{ mb: 2 }}
           />
 
-          {userData?.dropLocation && (
+          {/* {userData?.dropLocation && (
             <CustomInput
               label="Drop Location"
               required
@@ -218,43 +220,61 @@ const handleSendOtp = async () => {
               disabled
               boxSx={{ mb: 2 }}
             />
-          )}
+          )} */}
+
+          <Box sx={{ mb: 2 }}>
+            <CustomAutocomplete
+              label="Drop Location"
+              required
+              placeholder="Select your Drop Location"
+              name="dropLocation"
+              control={control}
+              errors={errors}
+              options={locationOptions.filter(
+                (opt: any) => opt.title !== userData?.pickupLocation?.id
+              )}
+              multiple={false}
+            />
+          </Box>
 
           {/* OTP input with button */}
-          {(userData?.status?.toLowerCase() === "pending" && user?.user?.role?.toLowerCase() === "transport") && (
-            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-              <CustomInput
-                label="OTP"
-                required
-                placeholder="Enter OTP"
-                type="text"
-                name="otp"
-                register={register}
-                errors={errors}
-                disabled={!otpSent}
-                boxSx={{ mb: 2 }}
-              />
-              {
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <CustomButton
-                    type="button"
-                    variant="contained"
-                    label={otpSent ? "Resend OTP" : "Get OTP"}
-                    onClick={handleSendOtp}
-                    loading={otpLoading}
-                    disabled={timeLeft > 0}
-                  />
-                  {timeLeft > 0 && (
-                    <Typography
-                      sx={{ fontSize: 12, color: "var(--text-secondary)" }}
-                    >
-                      OTP expires in: {formatTime(timeLeft)}
-                    </Typography>
-                  )}
-                </Box>
-              }
-            </Box>
-          )}
+          {userData?.status?.toLowerCase() === "pending" &&
+            user?.user?.role?.toLowerCase() === "transport" && (
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                <CustomInput
+                  label="OTP"
+                  required
+                  placeholder="Enter OTP"
+                  type="text"
+                  name="otp"
+                  register={register}
+                  errors={errors}
+                  disabled={!otpSent}
+                  boxSx={{ mb: 2 }}
+                />
+                {
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
+                    <CustomButton
+                      type="button"
+                      variant="contained"
+                      label={otpSent ? "Resend OTP" : "Get OTP"}
+                      onClick={handleSendOtp}
+                      loading={otpLoading}
+                      disabled={timeLeft > 0 || !droplocation}
+                    />
+                    {timeLeft > 0 && (
+                      <Typography
+                        sx={{ fontSize: 12, color: "var(--text-secondary)" }}
+                      >
+                        OTP expires in: {formatTime(timeLeft)}
+                      </Typography>
+                    )}
+                  </Box>
+                }
+              </Box>
+            )}
 
           {/* Buttons */}
         </Box>
@@ -270,15 +290,17 @@ const handleSendOtp = async () => {
             }}
             onClick={handleClose}
           />
-          {(userData?.status?.toLowerCase() === "pending" && user?.user?.role?.toLowerCase() === "transport") && (
-            <CustomButton
-              type="submit"
-              variant="contained"
-              size="medium"
-              label={"Verify Otp"}
-              onClick={handleSubmit(onSubmit)}
-            />
-          )}
+          {userData?.status?.toLowerCase() === "pending" &&
+            user?.user?.role?.toLowerCase() === "transport" && (
+              <CustomButton
+                type="submit"
+                variant="contained"
+                size="medium"
+                label={"Verify Otp"}
+                onClick={handleSubmit(onSubmit)}
+                disabled={!droplocation}
+              />
+            )}
         </Box>
       </Box>
     </Modal>

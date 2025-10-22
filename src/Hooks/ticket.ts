@@ -56,9 +56,9 @@ export const useVerifyOtp = () => {
   const { callApi } = useApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, otp }: { id: string; otp: string }) => {
+    mutationFn: async ({ id, otp, dropLocation }: { id: string; otp: string; dropLocation?: string }) => {
       const response = await callApi(
-        `${apiUrls.rideTicket}/verify-otp/${id}?otp=${otp}`,
+        `${apiUrls.rideTicket}/verify-otp/${id}?otp=${otp}&dropLocation=${dropLocation}`,
         "POST"
       );
       return response as ApiResponse<string>;

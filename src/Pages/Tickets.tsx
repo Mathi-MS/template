@@ -56,7 +56,6 @@ export const Tickets = () => {
     dateRange: null,
   });
 
-  // 📦 Handlers
   const handleView = (ticket: any) => {
     setSelectedTicket(ticket);
     setOpen(true);
@@ -67,7 +66,7 @@ export const Tickets = () => {
     reset({
       city: ticket?.city?.cityName || "",
       pickupLocation: ticket?.pickupLocation?.locationName || "",
-      dropLocation: ticket?.dropLocation?.id || "",
+      dropLocation: ticket?.dropLocation?.locationName || "",
     });
     setEditOpen(true);
   };
@@ -99,9 +98,9 @@ export const Tickets = () => {
       }
     );
   };
+
   const { data: vendorData } = useGetVendors();
 
-  // 🔢 Table Data
   const numberedRows = (data ?? []).map((row: any, idx: number) => ({
     ...row,
     sno: idx + 1,
@@ -186,33 +185,23 @@ export const Tickets = () => {
     },
   ];
 
-  // 🏙 Drop Location Options (excluding pickup)
-  const locationOptions =
-    selectedTicket?.city?.locations
-      ?.filter((loc: any) => loc.id !== selectedTicket?.pickupLocation?.id)
-      ?.map((loc: any) => ({
-        label: loc.locationName,
-        title: loc.id,
-      })) || [];
-
   useEffect(() => {
     if (vendorData?.length === 1) {
-      setSelectedVendor(vendorData[0]); // automatically select the only vendor
+      setSelectedVendor(vendorData[0]);
     }
   }, [vendorData]);
 
   return (
     <Box>
-      {/* 🧭 Filters + Actions */}
+      {/* 🧭 Filters */}
       <Box sx={{ mb: 3 }}>
-        {/* Filters Row */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            gap: 2, // spacing between filters
-            mb: 2, // spacing below filters
+            gap: 2,
+            mb: 2,
           }}
         >
           <CustomAutocomplete
@@ -256,14 +245,7 @@ export const Tickets = () => {
           </Box>
         </Box>
 
-        {/* Buttons Row */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: 2,
-          }}
-        >
+        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
           <CustomButton
             type="button"
             variant="outlined"
@@ -329,14 +311,14 @@ export const Tickets = () => {
         title="My Tickets"
       />
 
-      {/* 👁 View Ticket Modal */}
+      {/* 👁 Ticket Modal */}
       <TicketModal
         open={open}
         onClose={handleClose}
         userData={selectedTicket}
       />
 
-      {/* ✏️ Edit Modal */}
+      {/* ✏️ Edit Remarks Modal */}
       <Modal
         open={editOpen}
         onClose={(event, reason) => {
@@ -362,7 +344,7 @@ export const Tickets = () => {
                 color: "var(--text-primary)",
               }}
             >
-              Edit Remarks & Drop Location
+              Edit Remarks
             </Typography>
             <IconButton onClick={handleEditClose} sx={iconStyle}>
               <CloseIcon />
@@ -396,19 +378,19 @@ export const Tickets = () => {
               disabled
               boxSx={{ mb: 2 }}
             />
-            {
-              <CustomAutocomplete
-                label="Drop Location"
-                required
-                placeholder="Select Drop Location"
-                name="dropLocation"
-                control={control}
-                errors={errors}
-                options={locationOptions}
-                multiple={false}
-                disabled={selectedTicket?.dropLocation}
-              />
-            }
+
+            {/* 🔒 Drop Location (Readonly) */}
+            <CustomInput
+              label="Drop Location"
+              placeholder="Drop Location"
+              type="text"
+              name="dropLocation"
+              register={register}
+              errors={errors}
+              disabled
+              boxSx={{ mb: 2 }}
+            />
+
             {selectedTicket?.status?.toLowerCase() === "ride started" && (
               <Box sx={{ ...btnStyleContainer, justifyContent: "end", mt: 3 }}>
                 <CustomButton
@@ -426,11 +408,7 @@ export const Tickets = () => {
                   type="submit"
                   variant="contained"
                   size="medium"
-                  label={
-                    selectedTicket?.status?.toLowerCase() === "ride started"
-                      ? "End Ride"
-                      : "Create Ride"
-                  }
+                  label="End Ride"
                   loading={isLoading}
                 />
               </Box>
