@@ -61,7 +61,7 @@ const CreateRide = () => {
 
   // Handle admin/superadmin logic
   useEffect(() => {
-    if (data && data.length === 1) {
+    if (data && data.length === 1 && data[0].status?.toLowerCase() !== "completed") {
       const ticket = data[0];
       const isAdmin =
         ticket.createdRole?.toLowerCase() === "admin" ||
@@ -92,7 +92,7 @@ const CreateRide = () => {
   const onSubmit = async () => {
     const formData = getValues();
 
-    if (data?.length === 1) {
+    if (data?.length === 1 && data[0].status?.toLowerCase() !== "completed") {
       const ticket = data[0];
       const isAdmin =
         ticket.createdRole?.toLowerCase() === "admin" ||

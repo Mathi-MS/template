@@ -233,6 +233,7 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
               options={locationOptions.filter(
                 (opt: any) => opt.title !== userData?.pickupLocation?.id
               )}
+              disabled={user?.user?.role?.toLowerCase() !== "transport" || userData?.dropLocation}
               multiple={false}
             />
           </Box>

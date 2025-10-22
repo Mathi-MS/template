@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiUrls } from "../api/apiUrl";
 import type { ApiResponse } from "../Interface/Custom";
 import { useApi } from "../api/apiService";
-import { showSuccess } from "../Custom/CustomToast";
+import { showError, showSuccess } from "../Custom/CustomToast";
 
 export const useGetMyTickets = (search?: string) => {
   const { callApi } = useApi();
@@ -36,6 +36,10 @@ export const useCreateRideTicket = () => {
       showSuccess("Ride ticket created successfully");
       queryClient.invalidateQueries({ queryKey: ["myTickets"] });
     },
+    onError: (error: any) => {
+      showError(error.message);
+      throw error;
+    }
   });
 };
 
