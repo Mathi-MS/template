@@ -130,8 +130,10 @@ const TicketModal = ({ open, onClose, userData }: TicketModalProps) => {
         showError("Please get OTP first");
         return;
       }
-
-      await verifyOtpMutation.mutateAsync({ id: userData.id, otp: data.otp, dropLocation: droplocation });
+      if(!userData?.dropLocation){
+        await verifyOtpMutation.mutateAsync({ id: userData.id, otp: data.otp, dropLocation: droplocation });
+      }
+      await verifyOtpMutation.mutateAsync({ id: userData.id, otp: data.otp });
       showSuccess("Ticket verified successfully");
       handleClose();
     } catch (err: any) {

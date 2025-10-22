@@ -117,7 +117,7 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
         cityId: userData.city?.id || "",
         pickupLocation: userData.pickupLocation?.id || "",
         transport: userData.transport?.id || "",
-        noOfPerson: userData.noOfPerson || 0,
+        noOfPerson: userData.noOfPerson.tostring() || 0,
         email: userData.email || "",
         pickupDate: userData.pickupDate ? dayjs(userData.pickupDate) : null,
       });

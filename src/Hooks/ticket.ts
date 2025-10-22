@@ -61,10 +61,13 @@ export const useVerifyOtp = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, otp, dropLocation }: { id: string; otp: string; dropLocation?: string }) => {
-      const response = await callApi(
-        `${apiUrls.rideTicket}/verify-otp/${id}?otp=${otp}&dropLocation=${dropLocation}`,
-        "POST"
-      );
+      let url = `${apiUrls.rideTicket}/verify-otp/${id}?otp=${otp}`;
+
+      if (dropLocation) {
+        url += `&dropLocation=${encodeURIComponent(dropLocation)}`;
+      }
+
+      const response = await callApi(url, "POST");
       return response as ApiResponse<string>;
     },
     onSuccess: () => {
