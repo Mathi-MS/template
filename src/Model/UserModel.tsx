@@ -80,7 +80,6 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
   });
 
   const selectedCity = watch("cityId");
-  const noOfPerson = watch("noOfPerson");
   const selectedCityData = (cities ?? []).find(
     (c: any) => c.id === selectedCity
   );
@@ -92,8 +91,7 @@ const UserModel = ({ open, onClose, userData, isEdit, isView }: any) => {
     })) ?? [];
 
   const { data: transports } = useGetTransportsByLocation(
-    typeof selectedCity === "string" ? selectedCity : undefined,
-    noOfPerson && noOfPerson > 0 ? noOfPerson : undefined
+    typeof selectedCity === "string" ? selectedCity : undefined
   );
 
   const transportOptions =

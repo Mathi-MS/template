@@ -50,7 +50,11 @@ export const Tickets = () => {
     },
   });
 
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    vendor: any | null;
+    city: any | null;
+    dateRange: [any, any] | null;
+  }>({
     vendor: null,
     city: null,
     dateRange: null,
@@ -111,13 +115,13 @@ export const Tickets = () => {
   const vendorOptions =
     vendorData?.map((v: any) => ({
       label: v.vendorName,
-      value: v.id,
+      title: v.id,
     })) || [];
 
   const cityOptions =
     Array.from(
       new Set(data?.map((t: any) => t.city?.cityName).filter(Boolean))
-    ).map((city) => ({ label: city, value: city })) || [];
+    ).map((city) => ({ label: city, title: city })) || [];
 
   const filteredRows = useMemo(() => {
     return numberedRows.filter((ticket: any) => {
@@ -145,8 +149,7 @@ export const Tickets = () => {
 
   const columns = [
     { id: "sno", label: "S.No" },
-    { id: "userId", label: "Recipient Name" },
-    { id: "mobileNo", label: "Recipient Contact No" },
+    { id: "userName", label: "Recipient Name" },
     {
       id: "pickupLocation",
       label: "Pickup Location",
@@ -195,36 +198,42 @@ export const Tickets = () => {
     <Box>
       {/* 🧭 Filters */}
       <Box sx={{ mb: 3 }}>
+        {/* Responsive filter row: wrap on small screens */}
         <Box
           sx={{
             display: "flex",
-            justifyContent: "center",
+            flexWrap: "wrap",
+            justifyContent: { xs: "center", md: "flex-start" },
             alignItems: "center",
             gap: 2,
             mb: 2,
           }}
         >
-          <CustomAutocomplete
-            label=""
-            name="vendor"
-            placeholder="Select Vendor"
-            options={vendorOptions}
-            value={selectedVendor}
-            control={control}
-            onChange={(e: any, val: any) => setSelectedVendor(val)}
-          />
+          <Box sx={{ width: { xs: "100%", sm: 240 } }}>
+            <CustomAutocomplete
+              label=""
+              name="vendor"
+              placeholder="Select Vendor"
+              options={vendorOptions}
+              value={selectedVendor}
+              control={control}
+              onChange={(_e: any, val: any) => setSelectedVendor(val)}
+            />
+          </Box>
 
-          <CustomAutocomplete
-            label=""
-            name="city"
-            placeholder="Select City"
-            options={cityOptions}
-            value={selectedCity}
-            control={control}
-            onChange={(e: any, val: any) => setSelectedCity(val)}
-          />
+          <Box sx={{ width: { xs: "100%", sm: 240 } }}>
+            <CustomAutocomplete
+              label=""
+              name="city"
+              placeholder="Select City"
+              options={cityOptions}
+              value={selectedCity}
+              control={control}
+              onChange={(_e: any, val: any) => setSelectedCity(val)}
+            />
+          </Box>
 
-          <Box>
+          <Box sx={{ width: { xs: "100%", sm: 280 } }}>
             <Typography
               sx={{
                 mb: 1,
@@ -240,12 +249,22 @@ export const Tickets = () => {
               onChange={(values) => setDateRange(values)}
               format="YYYY-MM-DD"
               allowClear
-              style={{ height: 40 }}
+              style={{ height: 40, width: "100%" }}
             />
           </Box>
+          
         </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+        {/* Responsive buttons: stack on xs */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: "flex-end",
+            gap: 2,
+            alignItems: { xs: "stretch", sm: "center" },
+          }}
+        >
           <CustomButton
             type="button"
             variant="outlined"
@@ -254,8 +273,10 @@ export const Tickets = () => {
               backgroundColor: "transparent",
               color: "var(--text-secondary)",
               border: "1px solid var(--border) !important",
+              width: { xs: "100%", sm: "auto" },
             }}
             onClick={() => {
+              reset();
               setSelectedVendor(null);
               setSelectedCity(null);
               setDateRange(null);
@@ -271,6 +292,7 @@ export const Tickets = () => {
             type="button"
             variant="contained"
             label="Apply Filters"
+            boxSx={{ width: { xs: "100%", sm: "auto" } }}
             onClick={() => {
               setFilters({
                 vendor: selectedVendor?.id || null,
@@ -284,6 +306,7 @@ export const Tickets = () => {
             type="button"
             variant="contained"
             label="Download PDF"
+            boxSx={{ width: { xs: "100%", sm: "auto" } }}
             onClick={() => {
               const vendorCity = selectedVendor?.city?.cityName || "";
               downloadInvoicePDF(
@@ -300,16 +323,18 @@ export const Tickets = () => {
       </Box>
 
       {/* 📋 Tickets Table */}
-      <CustomTable
-        rows={filteredRows}
-        columns={columns}
-        showCheckbox={false}
-        sortable
-        colvis
-        search
-        exportBoolean
-        title="My Tickets"
-      />
+      <Box sx={{ overflowX: "auto" }}>
+        <CustomTable
+          rows={filteredRows}
+          columns={columns}
+          showCheckbox={false}
+          sortable
+          colvis
+          search
+          exportBoolean
+          title="My Tickets"
+        />
+      </Box>
 
       {/* 👁 Ticket Modal */}
       <TicketModal
@@ -321,7 +346,7 @@ export const Tickets = () => {
       {/* ✏️ Edit Remarks Modal */}
       <Modal
         open={editOpen}
-        onClose={(event, reason) => {
+        onClose={(_event, reason) => {
           if (reason === "backdropClick") return;
           handleEditClose();
         }}
@@ -419,3 +444,4 @@ export const Tickets = () => {
     </Box>
   );
 };
+ 

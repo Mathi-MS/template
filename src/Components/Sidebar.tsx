@@ -212,7 +212,7 @@ export const Sidebar = () => {
         label: "Masters",
         path: "/masters",
         icon: <ManageAccountsOutlinedIcon fontSize="small" />,
-        roles: ["superadmin", "vendor"],
+        roles: ["superadmin"],
       },
       // Example of nested menu (if needed)
       // {

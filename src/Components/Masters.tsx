@@ -1,4 +1,4 @@
-import { useState, } from "react";
+ import { useState, } from "react";
 import { Box, Tabs, Tab, Typography } from "@mui/material";
 import { City } from "../Pages/City";
 import { Location } from "../Pages/Location";
@@ -52,7 +52,7 @@ export const Masters = () => {
      {
        label: "Transport",
        component: <TransportTable />,
-       roles: ["vendor"],
+       roles: ["superadmin"],
      },
    ];
 
