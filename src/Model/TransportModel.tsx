@@ -15,11 +15,27 @@ import {
 import { transportSchema } from "../assets/Validation/Schema";
 import { useTransportCreate, useUpdateTransport } from "../Hooks/transport";
 import { useUser } from "../Config/userContext";
+import { useGetCities } from "../Hooks/city";
+import { useGetVendors } from "../Hooks/vendor";
 
 const TransportModel = ({ open, onClose, userData, isEdit, isView }: any) => {
   const [isLoading, setLoading] = useState<boolean>(false);
-
   const { user } = useUser();
+
+  const { data: cityData } = useGetCities();
+  const { data: vendorData } = useGetVendors();
+
+  const cityOptions =
+    cityData?.map((d: any) => ({
+      label: d.cityName,
+      title: d.id,
+    })) || [];
+
+  const vendorOptions =
+    vendorData?.map((v: any) => ({
+      label: v.vendorName,
+      title: v.id,
+    })) || [];
 
   const {
     register,
@@ -39,8 +55,8 @@ const TransportModel = ({ open, onClose, userData, isEdit, isView }: any) => {
       type: "",
       seater: 0,
       vendor: "",
-      email:"",
       vendorName: "",
+      email: "",
       city: "",
       cityName: "",
     },
@@ -59,24 +75,24 @@ const TransportModel = ({ open, onClose, userData, isEdit, isView }: any) => {
         type: userData.type || "",
         seater: userData.seater || 0,
         vendor: userData.vendorId || "",
-        vendorName: user?.user?.account?.vendorName || "",
-        city:user?.user?.account?.city?.id||"",
-        cityName:user?.user?.account?.city?.cityName||"",
-        email:userData.email||"",
+        vendorName: userData.vendorName || "",
+        city: userData.city.id || "",
+        cityName: userData.city.cityName || "",
+        email: userData.email || "",
       });
     } else {
       reset({
-        vendor: user?.user?.account?.id,
-        vendorName: user?.user?.account?.vendorName,
+        vendor: user?.user?.account?.id || "",
+        vendorName: user?.user?.account?.vendorName || "",
+        city: user?.user?.account?.city?.id || "",
+        cityName: user?.user?.account?.city?.cityName || "",
         transportId: "",
         vehicleNo: "",
         ownerDetails: "",
         contact: "",
         type: "",
         seater: 0,
-        email:"",
-        city: user?.user?.account?.city?.id || "",
-        cityName: user?.user?.account?.city?.cityName || "",
+        email: "",
       });
     }
   }, [open, userData?.id]);
@@ -97,18 +113,18 @@ const TransportModel = ({ open, onClose, userData, isEdit, isView }: any) => {
       }
       handleClose();
     } catch (err: any) {
-          console.error(err);
-          if (err?.errors) {
-            Object.keys(err.errors).forEach((field) => {
-              setError(field as keyof any, {
-                type: "manual",
-                message: err.errors[field],
-              });
-            });
-          } else {
-            showError("Something went wrong while saving transport");
-          }
-        } finally {
+      console.error(err);
+      if (err?.errors) {
+        Object.keys(err.errors).forEach((field) => {
+          setError(field as keyof any, {
+            type: "manual",
+            message: err.errors[field],
+          });
+        });
+      } else {
+        showError("Something went wrong while saving transport");
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -239,28 +255,36 @@ const TransportModel = ({ open, onClose, userData, isEdit, isView }: any) => {
             disabled={isView}
             boxSx={{ mb: 2 }}
           />
-          <CustomInput
-            label="Vendor"
-            required
-            name="vendorName"
-            type="text"
-            placeholder="Enter Vendor Name"
-            register={register}
-            errors={errors}
-            disabled
-            boxSx={{ mb: 2 }}
-          />
-          <CustomInput
-            label="City"
-            required
-            name="cityName"
-            type="text"
-            placeholder="Enter City Name"
-            register={register}
-            errors={errors}
-            disabled
-            boxSx={{ mb: 2 }}
-          />
+
+          {/* ✅ Vendor Autocomplete */}
+          <Box sx={{ mb: 2 }}>
+            <CustomAutocomplete
+              label="Vendor"
+              required
+              placeholder="Select Vendor"
+              name="vendor"
+              control={control}
+              errors={errors}
+              options={vendorOptions}
+              multiple={false}
+              disabled={isView}
+            />
+          </Box>
+
+          {/* ✅ City Autocomplete */}
+          <Box sx={{ mb: 2 }}>
+            <CustomAutocomplete
+              label="City"
+              required
+              placeholder="Select City"
+              name="city"
+              control={control}
+              errors={errors}
+              options={cityOptions}
+              multiple={false}
+              disabled={isView}
+            />
+          </Box>
         </Box>
 
         {!isView && (
@@ -282,11 +306,6 @@ const TransportModel = ({ open, onClose, userData, isEdit, isView }: any) => {
               size="medium"
               label={isEdit ? "Save Changes" : "Create"}
               loading={isLoading}
-              // onClick={() => {
-              //   console.log(getValues());
-                
-              //   handleSubmit(onSubmit);
-              // }}
               onClick={handleSubmit(onSubmit)}
             />
           </Box>
