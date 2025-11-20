@@ -10,7 +10,7 @@ import { useUser } from "../Config/userContext";
 import { useCreateRideTicket, useGetMyTickets } from "../Hooks/ticket";
 import { showError, showSuccess } from "../Custom/CustomToast";
 import dayjs from "dayjs";
-import noRide from "../assets/images/car.png";
+import { images } from "../assets/Images/Images";
 
 const CreateRide = () => {
   const { user } = useUser();
@@ -257,7 +257,7 @@ const CreateRide = () => {
             }}
           >
             <img
-              src={noRide}
+              src={images.noride}
               alt="No Ride Yet"
               style={{ width: "220px", marginBottom: "1.5rem" }}
             />
