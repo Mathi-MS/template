@@ -1,9 +1,11 @@
 import { Box, Typography, IconButton, Modal } from "@mui/material";
 import { useState, useMemo, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { MdOutlineRemoveRedEye, MdEdit } from "react-icons/md";
 import CloseIcon from "@mui/icons-material/Close";
 import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+dayjs.extend(isBetween);
 import { DatePicker } from "antd";
 
 import CustomTable from "../Custom/CustomTable";
@@ -24,41 +26,38 @@ const { RangePicker } = DatePicker;
 
 export const Tickets = () => {
   const { data } = useGetMyTickets();
+  const { data: vendorData } = useGetVendors();
+
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
 
-  // 🧭 Filter states
-  const [selectedVendor, setSelectedVendor] = useState<any>(null);
-  const [selectedCity, setSelectedCity] = useState<any>(null);
-  const [dateRange, setDateRange] = useState<[any, any] | null>(null);
+  // Active filters (only applied after clicking Apply Filters)
+  const [filters, setFilters] = useState({
+    vendor: null,
+    city: null,
+    dateRange: null,
+  });
 
-  const { mutate: updateRemarks, isPending: isLoading } = useUpdateRemarks();
-
+  // Form for filter inputs + edit modal inputs
   const {
-    register,
     control,
     handleSubmit,
     reset,
     getValues,
+    register,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      city: "",
+      vendor: null,
+      city: null,
+      dateRange: null,
       pickupLocation: "",
       dropLocation: "",
     },
   });
 
-  const [filters, setFilters] = useState<{
-    vendor: any | null;
-    city: any | null;
-    dateRange: [any, any] | null;
-  }>({
-    vendor: null,
-    city: null,
-    dateRange: null,
-  });
+  const { mutate: updateRemarks, isPending: isLoading } = useUpdateRemarks();
 
   const handleView = (ticket: any) => {
     setSelectedTicket(ticket);
@@ -75,36 +74,6 @@ export const Tickets = () => {
     setEditOpen(true);
   };
 
-  const handleClose = () => {
-    setOpen(false);
-    setSelectedTicket(null);
-  };
-
-  const handleEditClose = () => {
-    setEditOpen(false);
-    setSelectedTicket(null);
-  };
-
-  const onSubmit = () => {
-    if (!selectedTicket) return;
-    const formData = getValues();
-
-    updateRemarks(
-      {
-        id: selectedTicket.id,
-        dropLocation: formData.dropLocation || undefined,
-      },
-      {
-        onSuccess: () => {
-          setEditOpen(false);
-          setSelectedTicket(null);
-        },
-      }
-    );
-  };
-
-  const { data: vendorData } = useGetVendors();
-
   const numberedRows = (data ?? []).map((row: any, idx: number) => ({
     ...row,
     sno: idx + 1,
@@ -119,34 +88,51 @@ export const Tickets = () => {
     })) || [];
 
   const cityOptions =
-    Array.from(
-      new Set(data?.map((t: any) => t.city?.cityName).filter(Boolean))
-    ).map((city) => ({ label: city, title: city })) || [];
+    data
+      ?.map((t: any) => t.city)
+      .filter(Boolean)
+      .reduce((acc: any[], curr: any) => {
+        if (!acc.find((c) => c.id === curr.id)) {
+          acc.push(curr);
+        }
+        return acc;
+      }, [])
+      .map((city) => ({
+        label: city.cityName,
+        title: city.id,
+        value: city,
+      })) || [];
 
+  // FILTER LOGIC - uses only "filters" (NOT form values)
   const filteredRows = useMemo(() => {
     return numberedRows.filter((ticket: any) => {
-      const matchesVendor = filters.vendor
-        ? ticket.vendor?.name === filters.vendor
+      const vendorMatch = filters.vendor
+        ? ticket.transport?.vendorId === filters.vendor
         : true;
 
-      const matchesCity = filters.city
-        ? ticket.city?.cityName === filters.city
-        : true;
+      const cityMatch = filters.city ? ticket.city?.id === filters.city : true;
 
-      const matchesDate =
-        filters.dateRange && filters.dateRange[0] && filters.dateRange[1]
-          ? dayjs(ticket.pickupDate).isAfter(
-              dayjs(filters.dateRange[0]).startOf("day")
-            ) &&
-            dayjs(ticket.pickupDate).isBefore(
-              dayjs(filters.dateRange[1]).endOf("day")
-            )
+      const start = filters.dateRange?.[0];
+      const end = filters.dateRange?.[1];
+
+      const dateMatch =
+        start && end
+          ? ticket.pickupDate
+            ? dayjs(ticket.rideStartTime).isBetween(
+                dayjs(start).startOf("day"),
+                dayjs(end).endOf("day"),
+                null,
+                "[]"
+              )
+            : false
           : true;
 
-      return matchesVendor && matchesCity && matchesDate;
+
+      return vendorMatch && cityMatch && dateMatch;
     });
   }, [numberedRows, filters]);
 
+  // Table columns
   const columns = [
     { id: "sno", label: "S.No" },
     { id: "userName", label: "Recipient Name" },
@@ -188,251 +174,194 @@ export const Tickets = () => {
     },
   ];
 
-  useEffect(() => {
-    if (vendorData?.length === 1) {
-      setSelectedVendor(vendorData[0]);
-    }
-  }, [vendorData]);
-
   return (
     <Box>
-      {/* 🧭 Filters */}
+      {/* FILTERS SECTION */}
       <Box sx={{ mb: 3 }}>
-        {/* Responsive filter row: wrap on small screens */}
         <Box
           sx={{
             display: "flex",
             flexWrap: "wrap",
-            justifyContent: { xs: "center", md: "flex-start" },
-            alignItems: "center",
             gap: 2,
             mb: 2,
           }}
         >
+          {/* Vendor */}
           <Box sx={{ width: { xs: "100%", sm: 240 } }}>
             <CustomAutocomplete
-              label=""
               name="vendor"
+              label="Vendor"
               placeholder="Select Vendor"
-              options={vendorOptions}
-              value={selectedVendor}
               control={control}
-              onChange={(_e: any, val: any) => setSelectedVendor(val)}
+              options={vendorOptions}
+              multiple={false}
             />
           </Box>
 
+          {/* City */}
           <Box sx={{ width: { xs: "100%", sm: 240 } }}>
             <CustomAutocomplete
-              label=""
               name="city"
+              label="City"
               placeholder="Select City"
-              options={cityOptions}
-              value={selectedCity}
               control={control}
-              onChange={(_e: any, val: any) => setSelectedCity(val)}
+              options={cityOptions}
             />
           </Box>
 
+          {/* Date Range */}
           <Box sx={{ width: { xs: "100%", sm: 280 } }}>
-            <Typography
-              sx={{
-                mb: 1,
-                fontSize: 14,
-                fontFamily: "Medium_M",
-                color: "var(--text-primary)",
-              }}
-            >
-              Date Range
-            </Typography>
-            <RangePicker
-              value={dateRange}
-              onChange={(values) => setDateRange(values)}
-              format="YYYY-MM-DD"
-              allowClear
-              style={{ height: 40, width: "100%" }}
+            <Typography sx={{ mb: 1, fontSize: 14 }}>Date Range</Typography>
+            <Controller
+              name="dateRange"
+              control={control}
+              render={({ field }) => (
+                <RangePicker
+                  {...field}
+                  value={field.value}
+                  onChange={(v) => field.onChange(v)}
+                  style={{ width: "100%", height: 40 }}
+                />
+              )}
             />
           </Box>
-          
         </Box>
 
-        {/* Responsive buttons: stack on xs */}
+        {/* BUTTONS (Apply / Clear / PDF) */}
         <Box
           sx={{
             display: "flex",
+            gap: 2,
             flexDirection: { xs: "column", sm: "row" },
             justifyContent: "flex-end",
-            gap: 2,
-            alignItems: { xs: "stretch", sm: "center" },
           }}
         >
+          {/* Clear Filters */}
           <CustomButton
-            type="button"
-            variant="outlined"
+            type="submit"
+            variant="contained"
             label="Clear Filters"
-            boxSx={{
-              backgroundColor: "transparent",
-              color: "var(--text-secondary)",
-              border: "1px solid var(--border) !important",
-              width: { xs: "100%", sm: "auto" },
-            }}
             onClick={() => {
               reset();
-              setSelectedVendor(null);
-              setSelectedCity(null);
-              setDateRange(null);
-              setFilters({
-                vendor: null,
-                city: null,
-                dateRange: null,
-              });
+              setFilters({ vendor: null, city: null, dateRange: null });
             }}
           />
 
+          {/* Apply Filters */}
           <CustomButton
-            type="button"
+            type="submit"
             variant="contained"
             label="Apply Filters"
-            boxSx={{ width: { xs: "100%", sm: "auto" } }}
             onClick={() => {
+              const vals = getValues();
+              console.log(vals.city);
+
               setFilters({
-                vendor: selectedVendor?.id || null,
-                city: selectedCity?.id || null,
-                dateRange,
+                vendor: vals.vendor,
+                city: vals.city,
+                dateRange: vals.dateRange,
               });
             }}
           />
 
+          {/* PDF Download */}
           <CustomButton
             type="button"
             variant="contained"
             label="Download PDF"
-            boxSx={{ width: { xs: "100%", sm: "auto" } }}
             onClick={() => {
-              const vendorCity = selectedVendor?.city?.cityName || "";
+              const selectedCity = cityOptions.find(
+                (c) =>
+                  c.title === filters.city
+              );
+              
+              const cityName = selectedCity?.label || "";
               downloadInvoicePDF(
                 filteredRows,
                 "My_Tickets",
-                "INV-1001",
                 new Date().toLocaleDateString(),
-                selectedVendor,
-                { cityName: vendorCity }
+                filters.vendor,
+                { cityName: cityName || "" }
               );
             }}
           />
         </Box>
       </Box>
 
-      {/* 📋 Tickets Table */}
-      <Box sx={{ overflowX: "auto" }}>
-        <CustomTable
-          rows={filteredRows}
-          columns={columns}
-          showCheckbox={false}
-          sortable
-          colvis
-          search
-          exportBoolean
-          title="My Tickets"
-        />
-      </Box>
+      {/* TABLE */}
+      <CustomTable
+        rows={filteredRows}
+        columns={columns}
+        showCheckbox={false}
+        sortable
+        colvis
+        search
+        exportBoolean
+        title="My Tickets"
+      />
 
-      {/* 👁 Ticket Modal */}
+      {/* VIEW MODAL */}
       <TicketModal
         open={open}
-        onClose={handleClose}
+        onClose={() => setOpen(false)}
         userData={selectedTicket}
       />
 
-      {/* ✏️ Edit Remarks Modal */}
+      {/* EDIT MODAL */}
       <Modal
         open={editOpen}
-        onClose={(_event, reason) => {
-          if (reason === "backdropClick") return;
-          handleEditClose();
+        onClose={(_, reason) => {
+          if (reason !== "backdropClick") setEditOpen(false);
         }}
-        sx={{ zIndex: 999999999 }}
       >
         <Box sx={styleModalNew}>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              variant="h6"
-              component="h2"
-              sx={{
-                fontSize: "16px",
-                fontFamily: "Medium_M",
-                color: "var(--text-primary)",
-              }}
-            >
-              Edit Remarks
-            </Typography>
-            <IconButton onClick={handleEditClose} sx={iconStyle}>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="h6">Edit Remarks</Typography>
+            <IconButton onClick={() => setEditOpen(false)} sx={iconStyle}>
               <CloseIcon />
             </IconButton>
           </Box>
 
           <Box
             component="form"
-            onSubmit={handleSubmit(onSubmit)}
-            sx={{ m: "10px 0px 20px 0px" }}
+            onSubmit={handleSubmit(() => {})}
+            sx={{ mt: 2 }}
           >
             <CustomInput
               label="City"
-              required
-              placeholder="Enter City"
-              type="text"
               name="city"
               register={register}
-              errors={errors}
               disabled
+              errors={errors}
               boxSx={{ mb: 2 }}
             />
             <CustomInput
               label="Pickup Location"
-              required
-              placeholder="Enter Pickup Location"
-              type="text"
               name="pickupLocation"
               register={register}
-              errors={errors}
               disabled
+              errors={errors}
               boxSx={{ mb: 2 }}
             />
-
-            {/* 🔒 Drop Location (Readonly) */}
             <CustomInput
               label="Drop Location"
-              placeholder="Drop Location"
-              type="text"
               name="dropLocation"
               register={register}
-              errors={errors}
               disabled
-              boxSx={{ mb: 2 }}
+              errors={errors}
             />
 
             {selectedTicket?.status?.toLowerCase() === "ride started" && (
               <Box sx={{ ...btnStyleContainer, justifyContent: "end", mt: 3 }}>
                 <CustomButton
-                  type="reset"
+                  type="button"
                   variant="outlined"
                   label="Cancel"
-                  onClick={handleEditClose}
-                  boxSx={{
-                    backgroundColor: "transparent",
-                    color: "var(--text-secondary)",
-                    border: "1px solid var(--border) !important",
-                  }}
+                  onClick={() => setEditOpen(false)}
                 />
                 <CustomButton
                   type="submit"
                   variant="contained"
-                  size="medium"
                   label="End Ride"
                   loading={isLoading}
                 />
@@ -444,4 +373,3 @@ export const Tickets = () => {
     </Box>
   );
 };
- 

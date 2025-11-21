@@ -6,116 +6,128 @@ export const downloadInvoicePDF = (
   rows: any[],
   fileName: string,
   invoiceNumber: string = "INV-1001",
-  invoiceDate: string = new Date().toLocaleDateString(),
   vendorInfo: any = null,
-  cityInfo: any = null,
-  customerAddress: string = "123 Embassy Street, Capital City"
+  cityInfo: any = null
 ) => {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  console.log(cityInfo);
+  
 
-  // --- Logo ---
-  doc.addImage(logoBase64, "PNG", 14, 15, 60, 25);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const marginLeft = 40;
 
-  // --- Header ---
-  doc.setFontSize(18);
-  doc.text("INVOICE", 160, 20, { align: "right" });
+  // -------------------------
+  // HEADER
+  // -------------------------
+  try {
+    doc.addImage(logoBase64, "PNG", marginLeft, 30, 110, 45);
+  } catch (_) {}
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
+  doc.text("INVOICE", pageWidth - marginLeft, 48, { align: "right" });
 
   doc.setFontSize(11);
-  doc.text(`Invoice No: ${invoiceNumber}`, 160, 30, { align: "right" });
-  doc.text(`Date: ${invoiceDate}`, 160, 37, { align: "right" });
-
-  // --- Vendor & City Info ---
-  doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text("Bill To:", 14, 55);
+  doc.text(`Invoice No: ${invoiceNumber}`, pageWidth - marginLeft, 70, {
+    align: "right",
+  });
+
+  // -------------------------
+  // BILLING INFO
+  // -------------------------
+  const billToTop = 110;
+
+  const billTo = vendorInfo?.vendorName || "";
+
+  doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
+  doc.text("Bill To:", marginLeft, billToTop);
 
-  const vendorName = vendorInfo?.vendorName || "N/A";
-  const cityName = cityInfo?.cityName || "N/A";
-
-  doc.text(`${vendorName}`, 14, 62);
   doc.setFont("helvetica", "normal");
-  doc.text(`City: ${cityName}`, 14, 69);
+  doc.text(billTo, marginLeft, billToTop + 16);
+  doc.text("", marginLeft, billToTop + 32);
 
-  // --- Line under header ---
+  const patient = rows?.[0]?.userName || "-";
+  const cityName = cityInfo?.cityName || "-";
+
+  const patientTop = billToTop + 60;
+
+  doc.setFont("helvetica", "bold");
+  doc.text(`Patient Name: ${patient}`, marginLeft, patientTop);
+  doc.text(`City: ${cityName}`, marginLeft, patientTop + 18);
+
+  // Line Separator
   doc.setDrawColor(200);
-  doc.setLineWidth(0.5);
-  doc.line(14, 82, 196, 82);
+  doc.setLineWidth(1);
+  doc.line(
+    marginLeft,
+    patientTop + 32,
+    pageWidth - marginLeft,
+    patientTop + 32
+  );
 
-  // --- Table Columns ---
-  const columns = [
-    { header: "S.No", dataKey: "sno" },
-    { header: "Recipient", dataKey: "recipient" },
-    { header: "City", dataKey: "city" },
-    { header: "Pickup Location", dataKey: "pickup" },
-    { header: "Drop Location", dataKey: "drop" },
-    { header: "Start Date", dataKey: "startDate" },
-    { header: "Start Time", dataKey: "startTime" },
-    { header: "End Date", dataKey: "endDate" },
-    { header: "End Time", dataKey: "endTime" },
-    { header: "Cost", dataKey: "cost" },
+  // -------------------------
+  // FORMAT HELPERS
+  // -------------------------
+  const fmtDate = (v: string) => {
+    if (!v) return "-";
+    return new Date(v).toLocaleDateString("en-US");
+  };
+
+  const fmtTime = (v: string) => {
+    if (!v) return "-";
+    return new Date(v)
+      .toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .toLowerCase();
+  };
+
+  // -------------------------
+  // MAIN TABLE (redesigned)
+  // -------------------------
+  const mainHead = [
+    [
+      "S.No",
+      "Pickup Location",
+      "Drop Location",
+      "Start Date",
+      "Start Time",
+      "End Date",
+      "End Time",
+      "Amount",
+    ],
   ];
 
-  // --- Format Date and Time ---
-  const formatDate = (isoString: string) => {
-    if (!isoString) return "-";
-    const date = new Date(isoString);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  const mainBody = rows.map((r: any, i: number) => [
+    i + 1,
+    r.pickupLocation?.locationName || "-",
+    r.dropLocation?.locationName || "-",
+    fmtDate(r.rideStartTime),
+    fmtTime(r.rideStartTime),
+    fmtDate(r.rideEndTime),
+    fmtTime(r.rideEndTime),
+    r.cost != null ? `$${Number(r.cost).toFixed(2)}` : "$0.00",
+  ]);
 
-  const formatTime = (isoString: string) => {
-    if (!isoString) return "-";
-    const date = new Date(isoString);
-    return date.toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
+  const mainStartY = patientTop + 55;
 
-  // --- Prepare Table Data ---
-  const tableData = rows.map((row, idx) => ({
-    sno: idx + 1,
-    recipient: row.userName || "-",
-    city: row.city?.cityName || "-",
-    pickup: row.pickupLocation?.locationName || "-",
-    drop: row.dropLocation?.locationName || "-",
-    startDate: formatDate(row.rideStartTime),
-    startTime: formatTime(row.rideStartTime),
-    endDate: formatDate(row.rideEndTime),
-    endTime: formatTime(row.rideEndTime),
-    cost: row.cost != null ? `$${row.cost.toFixed(2)}` : "-",
-  }));
-
-  // --- Calculate Total Cost ---
-  const totalCost = rows.reduce((acc, row) => acc + (row.cost || 0), 0);
-
-  // --- Table ---
   autoTable(doc, {
-    startY: 85,
-    head: [columns.map((c) => c.header)],
-    body: tableData.map((d) => [
-      d.sno,
-      d.recipient,
-      d.city,
-      d.pickup,
-      d.drop,
-      d.startDate,
-      d.startTime,
-      d.endDate,
-      d.endTime,
-      d.cost,
-    ]),
+    startY: mainStartY,
+    head: mainHead,
+    body: mainBody,
+    theme: "grid",
     styles: {
+      font: "helvetica",
+      fontSize: 9,
       halign: "center",
       valign: "middle",
-      fontSize: 9,
+      cellPadding: 5,
       lineColor: [200, 200, 200],
-      lineWidth: 0.1,
+      lineWidth: 0.5,
     },
     headStyles: {
       fillColor: [70, 95, 255],
@@ -123,47 +135,101 @@ export const downloadInvoicePDF = (
       fontStyle: "bold",
     },
     alternateRowStyles: {
-      fillColor: [236, 243, 255],
+      fillColor: [240, 246, 255],
     },
     columnStyles: {
-      sno: { cellWidth: 10 },
-      recipient: { cellWidth: 20 },
-      city: { cellWidth: 20 },
-      pickup: { cellWidth: 25 },
-      drop: { cellWidth: 25 },
-      startDate: { cellWidth: 20 },
-      startTime: { cellWidth: 20 },
-      endDate: { cellWidth: 20 },
-      endTime: { cellWidth: 20 },
-      cost: { cellWidth: 20 },
+      0: { cellWidth: 30 },
+      1: { cellWidth: 100, halign: "left" },
+      2: { cellWidth: 100, halign: "left" },
+      3: { cellWidth: 55 },
+      4: { cellWidth: 55 },
+      5: { cellWidth: 55 },
+      6: { cellWidth: 55 },
+      7: { cellWidth: 65, halign: "right" },
     },
   });
 
-  // --- Add Styled Total Box ---
-  const finalY = (doc as any).lastAutoTable.finalY + 15;
-  doc.setFontSize(12);
+  // -------------------------
+  // TOTAL AMOUNT BOX
+  // -------------------------
+  const total = rows.reduce((sum: number, r: any) => sum + (r.cost || 0), 0);
+  const lastY = (doc as any).lastAutoTable.finalY;
+
+  const boxX = pageWidth - marginLeft - 160;
+  const boxY = lastY + 15;
+
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
 
-  // Draw a light background box
-  doc.setFillColor(240, 240, 240);
-  doc.roundedRect(130, finalY - 8, 65, 12, 2, 2, "F");
+  doc.setDrawColor(0);
+  doc.setLineWidth(1);
+  doc.rect(boxX, boxY, 160, 28);
 
-  // Add total cost text
-  doc.setTextColor(0, 0, 0);
-  doc.text(`Total Cost: $${totalCost.toFixed(2)}`, 190, finalY, {
-    align: "right",
+  doc.text("TOTAL AMOUNT", boxX + 10, boxY + 18);
+  doc.text(`$${total.toFixed(2)}`, boxX + 150, boxY + 18, { align: "right" });
+
+  // -------------------------
+  // CITY NAME ABOVE SUMMARY TABLE
+  // -------------------------
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text(cityName, marginLeft, boxY + 80);
+
+  // -------------------------
+  // SUMMARY TABLE
+  // -------------------------
+  const summaryHead = [["S.No", "Pickup Location", "Drop Location", "Price"]];
+
+  const summaryBody = rows.map((r: any, i: number) => [
+    i + 1,
+    r.pickupLocation?.locationName || "-",
+    r.dropLocation?.locationName || "-",
+    r.cost != null ? `$${Number(r.cost).toFixed(2)}` : "$0.00",
+  ]);
+
+  autoTable(doc, {
+    startY: boxY + 95,
+    head: summaryHead,
+    body: summaryBody,
+    theme: "grid",
+    styles: {
+      font: "helvetica",
+      fontSize: 9,
+      halign: "center",
+      valign: "middle",
+      cellPadding: 5,
+      lineColor: [200, 200, 200],
+      lineWidth: 0.5,
+    },
+    headStyles: {
+      fillColor: [70, 95, 255],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    alternateRowStyles: {
+      fillColor: [240, 246, 255],
+    },
+    columnStyles: {
+      0: { cellWidth: 35 },
+      1: { cellWidth: 150, halign: "left" },
+      2: { cellWidth: 150, halign: "left" },
+      3: { cellWidth: 80, halign: "right" },
+    },
   });
 
-  // --- Footer ---
-  const pageHeight = doc.internal.pageSize.height;
+  // -------------------------
+  // FOOTER
+  // -------------------------
+  const pageHeight = doc.internal.pageSize.getHeight();
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor("#888");
   doc.text(
     "Thank you for choosing TTMS. For queries, contact support@ttms.com",
-    14,
-    pageHeight - 10
+    marginLeft,
+    pageHeight - 40
   );
 
-  // --- Save PDF ---
+  // SAVE
   doc.save(`${fileName}.pdf`);
 };
