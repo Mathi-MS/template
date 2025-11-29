@@ -1,5 +1,5 @@
 import { Box, Typography, IconButton, Modal } from "@mui/material";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { MdOutlineRemoveRedEye, MdEdit } from "react-icons/md";
 import CloseIcon from "@mui/icons-material/Close";
@@ -32,14 +32,14 @@ export const Tickets = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
 
-  // Active filters (only applied after clicking Apply Filters)
+  // Active filters
   const [filters, setFilters] = useState({
     vendor: null,
     city: null,
     dateRange: null,
+    user: null, // NEW user filter
   });
 
-  // Form for filter inputs + edit modal inputs
   const {
     control,
     handleSubmit,
@@ -52,6 +52,7 @@ export const Tickets = () => {
       vendor: null,
       city: null,
       dateRange: null,
+      user: null, // NEW
       pickupLocation: "",
       dropLocation: "",
     },
@@ -74,6 +75,29 @@ export const Tickets = () => {
     setEditOpen(true);
   };
 
+    const handleEditClose = () => {
+      setEditOpen(false);
+      setSelectedTicket(null);
+    };
+
+   const onSubmit = () => {
+     if (!selectedTicket) return;
+     const formData = getValues();
+
+     updateRemarks(
+       {
+         id: selectedTicket.id,
+         dropLocation: formData.dropLocation || undefined,
+       },
+       {
+         onSuccess: () => {
+           setEditOpen(false);
+           setSelectedTicket(null);
+         },
+       }
+     );
+   };
+
   const numberedRows = (data ?? []).map((row: any, idx: number) => ({
     ...row,
     sno: idx + 1,
@@ -92,9 +116,7 @@ export const Tickets = () => {
       ?.map((t: any) => t.city)
       .filter(Boolean)
       .reduce((acc: any[], curr: any) => {
-        if (!acc.find((c) => c.id === curr.id)) {
-          acc.push(curr);
-        }
+        if (!acc.find((c) => c.id === curr.id)) acc.push(curr);
         return acc;
       }, [])
       .map((city) => ({
@@ -103,7 +125,14 @@ export const Tickets = () => {
         value: city,
       })) || [];
 
-  // FILTER LOGIC - uses only "filters" (NOT form values)
+  // NEW - Username dropdown options
+  const userOptions =
+    data?.map((t: any) => ({
+      label: t.userName,
+      title: t.userId,
+    })) || [];
+
+  // FILTER LOGIC
   const filteredRows = useMemo(() => {
     return numberedRows.filter((ticket: any) => {
       const vendorMatch = filters.vendor
@@ -111,6 +140,8 @@ export const Tickets = () => {
         : true;
 
       const cityMatch = filters.city ? ticket.city?.id === filters.city : true;
+
+      const userMatch = filters.user ? ticket.userId === filters.user : true;
 
       const start = filters.dateRange?.[0];
       const end = filters.dateRange?.[1];
@@ -127,12 +158,11 @@ export const Tickets = () => {
             : false
           : true;
 
-
-      return vendorMatch && cityMatch && dateMatch;
+      return vendorMatch && cityMatch && userMatch && dateMatch;
     });
   }, [numberedRows, filters]);
 
-  // Table columns
+  // TABLE COLUMNS
   const columns = [
     { id: "sno", label: "S.No" },
     { id: "userName", label: "Recipient Name" },
@@ -209,6 +239,18 @@ export const Tickets = () => {
             />
           </Box>
 
+          {/* Username */}
+          <Box sx={{ width: { xs: "100%", sm: 240 } }}>
+            <CustomAutocomplete
+              name="user"
+              label="Username"
+              placeholder="Select Username"
+              control={control}
+              options={userOptions}
+              multiple={false}
+            />
+          </Box>
+
           {/* Date Range */}
           <Box sx={{ width: { xs: "100%", sm: 280 } }}>
             <Typography sx={{ mb: 1, fontSize: 14 }}>Date Range</Typography>
@@ -227,7 +269,7 @@ export const Tickets = () => {
           </Box>
         </Box>
 
-        {/* BUTTONS (Apply / Clear / PDF) */}
+        {/* BUTTONS */}
         <Box
           sx={{
             display: "flex",
@@ -243,7 +285,12 @@ export const Tickets = () => {
             label="Clear Filters"
             onClick={() => {
               reset();
-              setFilters({ vendor: null, city: null, dateRange: null });
+              setFilters({
+                vendor: null,
+                city: null,
+                dateRange: null,
+                user: null,
+              });
             }}
           />
 
@@ -254,12 +301,12 @@ export const Tickets = () => {
             label="Apply Filters"
             onClick={() => {
               const vals = getValues();
-              console.log(vals.city);
 
               setFilters({
                 vendor: vals.vendor,
                 city: vals.city,
                 dateRange: vals.dateRange,
+                user: vals.user,
               });
             }}
           />
@@ -269,19 +316,34 @@ export const Tickets = () => {
             type="button"
             variant="contained"
             label="Download PDF"
+            disabled={!filters.vendor && !filters.user}
             onClick={() => {
+              // 1. City selected from city filter
               const selectedCity = cityOptions.find(
-                (c) =>
-                  c.title === filters.city
+                (c) => c.title === filters.city
               );
-              
-              const cityName = selectedCity?.label || "";
+
+              // 2. Get user's city if user is selected
+              let autoCityName = "";
+              if (filters.user) {
+                const userTicket = data?.find(
+                  (t: any) => t.userId === filters.user
+                );
+                autoCityName = userTicket?.city?.cityName || "";
+              }
+
+              // 3. Priority: user city → selected city → empty
+              const cityName = filters.user
+                ? autoCityName
+                : selectedCity?.label || "";
+
+              // 4. Generate PDF
               downloadInvoicePDF(
                 filteredRows,
                 "My_Tickets",
                 new Date().toLocaleDateString(),
                 filters.vendor,
-                { cityName: cityName || "" }
+                { cityName }
               );
             }}
           />
@@ -310,21 +372,22 @@ export const Tickets = () => {
       {/* EDIT MODAL */}
       <Modal
         open={editOpen}
-        onClose={(_, reason) => {
-          if (reason !== "backdropClick") setEditOpen(false);
+        onClose={(_event, reason) => {
+          if (reason === "backdropClick") return;
+          handleEditClose();
         }}
       >
         <Box sx={styleModalNew}>
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography variant="h6">Edit Remarks</Typography>
-            <IconButton onClick={() => setEditOpen(false)} sx={iconStyle}>
+            <IconButton onClick={handleEditClose} sx={iconStyle}>
               <CloseIcon />
             </IconButton>
           </Box>
 
           <Box
             component="form"
-            onSubmit={handleSubmit(() => {})}
+            onSubmit={handleSubmit(onSubmit)}
             sx={{ mt: 2 }}
           >
             <CustomInput
@@ -335,6 +398,7 @@ export const Tickets = () => {
               errors={errors}
               boxSx={{ mb: 2 }}
             />
+
             <CustomInput
               label="Pickup Location"
               name="pickupLocation"
@@ -343,6 +407,7 @@ export const Tickets = () => {
               errors={errors}
               boxSx={{ mb: 2 }}
             />
+
             <CustomInput
               label="Drop Location"
               name="dropLocation"
@@ -355,7 +420,7 @@ export const Tickets = () => {
               <Box sx={{ ...btnStyleContainer, justifyContent: "end", mt: 3 }}>
                 <CustomButton
                   type="button"
-                  variant="outlined"
+                  variant="contained"
                   label="Cancel"
                   onClick={() => setEditOpen(false)}
                 />
@@ -364,6 +429,10 @@ export const Tickets = () => {
                   variant="contained"
                   label="End Ride"
                   loading={isLoading}
+                  onClick={() => {
+                    console.log(getValues());
+                    console.log(errors);
+                  }}
                 />
               </Box>
             )}
