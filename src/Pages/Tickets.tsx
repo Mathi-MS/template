@@ -340,7 +340,7 @@ export const Tickets = () => {
               // 4. Generate PDF
               downloadInvoicePDF(
                 filteredRows,
-                "My_Tickets",
+                "Invoice",
                 new Date().toLocaleDateString(),
                 filters.vendor,
                 { cityName }

@@ -177,6 +177,7 @@ import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlin
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import TravelExploreOutlinedIcon from "@mui/icons-material/TravelExploreOutlined";
 import { useUser } from "../Config/userContext"; // ✅ import user context
+import { commonWord } from "../assets/CommonWord";
 
 export const Sidebar = () => {
   const location = useLocation();
@@ -247,7 +248,7 @@ export const Sidebar = () => {
     >
       {/* Logo */}
       <Box sx={{ p: 3, fontWeight: 700, fontSize: 22, color: "#111" }}>
-        <TravelExploreOutlinedIcon sx={{ color: "var(--primary)" }} /> BoilerPlate
+        <TravelExploreOutlinedIcon sx={{ color: "var(--primary)" }} /> {commonWord.title}
       </Box>
 
       {/* Menu */}
